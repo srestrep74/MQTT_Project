@@ -1,0 +1,8 @@
+#ifndef FLAGS_MESSAGES_H
+#define FLAGS_MESSAGES_H
+
+#define WILL_FLAG 0x04
+#define USER_NAME_FLAG 0x80
+#define PASSWORD_FLAG 0x40
+
+#endif
