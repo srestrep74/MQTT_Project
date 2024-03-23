@@ -1,270 +1,368 @@
 #include "connect.h"
 #include <string.h>
 #include <stdlib.h>
+#include "../message.h"
 
-void init_connect_message(connect_message_t *msg, const char *client_id, uint16_t keep_alive, const char *will_topic, const char *will_message, const char *user_name, const char *password)
+static uint32_t get_remaining_length(const ConnectMessage_t *msg)
+{
+    uint32_t remainingLength = 10;                /* Length of fixed part of CONNECT message */
+    remainingLength += strlen(msg->clientId) + 2; /* Client ID length + Client ID */
+
+    if (msg->willTopic)
+    {
+        remainingLength += 2 + msg->willTopicLength; /* Will Topic length + Will Topic */
+    }
+
+    if (msg->willMessage)
+    {
+        remainingLength += 2 + msg->willMessageLength; /* Will Message length + Will Message */
+    }
+
+    if (msg->userName)
+    {
+        remainingLength += 2 + msg->userNameLength; /* User Name length + User Name */
+    }
+
+    if (msg->password)
+    {
+        remainingLength += 2 + msg->passwordLength; /* Password length + Password */
+    }
+
+    return remainingLength;
+}
+
+void init_connect_message(ConnectMessage_t *msg, const char *clientId, uint16_t keepAlive, const char *willTopic, const char *willMessage, const char *userName, const char *password)
 {
     init_base_message(&msg->base);
     set_message_type(&msg->base, CONNECT);
 
-    strncpy(msg->client_id, client_id, MAX_CLIENT_ID_LENGTH);
+    strncpy(msg->clientId, clientId, MAX_CLIENT_ID_LENGTH);
+    msg->clientId[MAX_CLIENT_ID_LENGTH] = '\0';
 
-    // Check this
-    msg->client_id[MAX_CLIENT_ID_LENGTH] = '\0';
+    msg->keepAlive = keepAlive;
+    msg->connectFlags = 0;
 
-    msg->keep_alive = keep_alive;
-
-    if (will_topic)
+    if (willTopic)
     {
-        msg->will_topic_length = strlen(will_topic);
-        msg->will_topic = malloc(msg->will_topic_length + 1);
-        strcpy(msg->will_topic, will_topic);
-        msg->connect_flags |= WILL_FLAG;
+        msg->willTopicLength = strlen(willTopic);
+        msg->willTopic = malloc(msg->willTopicLength + 1);
+        if (msg->willTopic == NULL)
+        {
+            // Handle memory allocation failure
+            return;
+        }
+        strcpy(msg->willTopic, willTopic);
+        msg->connectFlags |= WILL_FLAG;
     }
     else
     {
-        msg->will_topic_length = 0;
-        msg->will_topic = NULL;
+        msg->willTopicLength = 0;
+        msg->willTopic = NULL;
     }
 
-    if (will_message)
+    if (willMessage)
     {
-        msg->will_message_length = strlen(will_message);
-        msg->will_message = malloc(msg->will_message_length + 1);
-        strcpy(msg->will_message, will_message);
-        msg->connect_flags |= WILL_FLAG;
+        msg->willMessageLength = strlen(willMessage);
+        msg->willMessage = malloc(msg->willMessageLength + 1);
+        if (msg->willMessage == NULL)
+        {
+            // Handle memory allocation failure
+            free(msg->willTopic);
+            return;
+        }
+        strcpy(msg->willMessage, willMessage);
+        msg->connectFlags |= WILL_FLAG;
     }
     else
     {
-        msg->will_message_length = 0;
-        msg->will_message = NULL;
+        msg->willMessageLength = 0;
+        msg->willMessage = NULL;
     }
 
-    if (user_name)
+    if (userName)
     {
-        msg->user_name_length = strlen(user_name);
-        msg->user_name = malloc(msg->user_name_length + 1);
-        strcpy(msg->user_name, user_name);
-        msg->connect_flags |= USER_NAME_FLAG;
+        msg->userNameLength = strlen(userName);
+        msg->userName = malloc(msg->userNameLength + 1);
+        if (msg->userName == NULL)
+        {
+            // Handle memory allocation failure
+            free(msg->willTopic);
+            free(msg->willMessage);
+            return;
+        }
+        strcpy(msg->userName, userName);
+        msg->connectFlags |= USER_NAME_FLAG;
     }
     else
     {
-        msg->user_name_length = 0;
-        msg->user_name = NULL;
+        msg->userNameLength = 0;
+        msg->userName = NULL;
     }
 
     if (password)
     {
-        msg->password_length = strlen(password);
-        msg->password = malloc(msg->password_length + 1);
+        msg->passwordLength = strlen(password);
+        msg->password = malloc(msg->passwordLength + 1);
+        if (msg->password == NULL)
+        {
+            // Handle memory allocation failure
+            free(msg->willTopic);
+            free(msg->willMessage);
+            free(msg->userName);
+            return;
+        }
         strcpy(msg->password, password);
-        msg->connect_flags |= PASSWORD_FLAG;
+        msg->connectFlags |= PASSWORD_FLAG;
     }
     else
     {
-        msg->password_length = 0;
+        msg->passwordLength = 0;
         msg->password = NULL;
     }
 
-    set_message_flags(&msg->base, msg->connect_flags);
+    set_message_flags(&msg->base, msg->connectFlags);
 }
 
-void encode_connect_message(connect_message_t *msg, uint8_t *buffer, uint32_t *buffer_length)
+int encode_connect_message(ConnectMessage_t *msg, uint8_t *buffer, uint32_t *bufferLength)
 {
     uint32_t len = 0;
-    uint32_t remaining_length = 0;
+    uint32_t remainingLength = get_remaining_length(msg);
 
-    /* Codifica el encabezado fijo */
+    if (*bufferLength < remainingLength + 2)
+    {
+        // Buffer is too small to encode the message
+        return -1;
+    }
+
+    /* Encode fixed header */
     buffer[len++] = msg->base.type;
     buffer[len++] = msg->base.flags;
 
-    /* Calcula la longitud restante */
-    remaining_length += 10;                         /* Longitud de la parte fija del mensaje CONNECT */
-    remaining_length += strlen(msg->client_id) + 2; /* Client ID length + Client ID */
-    if (msg->will_topic)
-    {
-        remaining_length += 2 + msg->will_topic_length; /* Will Topic length + Will Topic */
-    }
-    if (msg->will_message)
-    {
-        remaining_length += 2 + msg->will_message_length; /* Will Message length + Will Message */
-    }
-    if (msg->user_name)
-    {
-        remaining_length += 2 + msg->user_name_length; /* User Name length + User Name */
-    }
-    if (msg->password)
-    {
-        remaining_length += 2 + msg->password_length; /* Password length + Password */
-    }
+    /* Encode remaining length */
+    encode_remaining_length(remainingLength, buffer + len);
+    len += get_remaining_length_bytes(remainingLength);
 
-    /* Codifica la longitud restante */
-    encode_remaining_length(remaining_length, buffer + len, &len);
-
-    /* Codifica el encabezado variable y la carga útil */
+    /* Encode variable header and payload */
     buffer[len++] = 0x00; /* Protocol Name Length MSB */
     buffer[len++] = 0x04; /* Protocol Name Length LSB */
     buffer[len++] = 'M';
     buffer[len++] = 'Q';
     buffer[len++] = 'T';
     buffer[len++] = 'T';
-    buffer[len++] = 0x04;                          /* Protocol Level */
-    buffer[len++] = msg->connect_flags;            /* Connect Flags */
-    buffer[len++] = (msg->keep_alive >> 8) & 0xFF; /* Keep Alive MSB */
-    buffer[len++] = msg->keep_alive & 0xFF;        /* Keep Alive LSB */
+    buffer[len++] = 0x04;                         /* Protocol Level */
+    buffer[len++] = msg->connectFlags;            /* Connect Flags */
+    buffer[len++] = (msg->keepAlive >> 8) & 0xFF; /* Keep Alive MSB */
+    buffer[len++] = msg->keepAlive & 0xFF;        /* Keep Alive LSB */
 
     /* Client ID */
-    uint16_t client_id_length = strlen(msg->client_id);
-    buffer[len++] = (client_id_length >> 8) & 0xFF; /* Client ID Length MSB */
-    buffer[len++] = client_id_length & 0xFF;        /* Client ID Length LSB */
-    memcpy(buffer + len, msg->client_id, client_id_length);
-    len += client_id_length;
+    uint16_t clientIdLength = strlen(msg->clientId);
+    buffer[len++] = (clientIdLength >> 8) & 0xFF; /* Client ID Length MSB */
+    buffer[len++] = clientIdLength & 0xFF;        /* Client ID Length LSB */
+    memcpy(buffer + len, msg->clientId, clientIdLength);
+    len += clientIdLength;
 
     /* Will Topic */
-    if (msg->will_topic)
+    if (msg->willTopic)
     {
-        buffer[len++] = (msg->will_topic_length >> 8) & 0xFF; /* Will Topic Length MSB */
-        buffer[len++] = msg->will_topic_length & 0xFF;        /* Will Topic Length LSB */
-        memcpy(buffer + len, msg->will_topic, msg->will_topic_length);
-        len += msg->will_topic_length;
+        buffer[len++] = (msg->willTopicLength >> 8) & 0xFF; /* Will Topic Length MSB */
+        buffer[len++] = msg->willTopicLength & 0xFF;        /* Will Topic Length LSB */
+        memcpy(buffer + len, msg->willTopic, msg->willTopicLength);
+        len += msg->willTopicLength;
     }
 
     /* Will Message */
-    if (msg->will_message)
+    if (msg->willMessage)
     {
-        buffer[len++] = (msg->will_message_length >> 8) & 0xFF; /* Will Message Length MSB */
-        buffer[len++] = msg->will_message_length & 0xFF;        /* Will Message Length LSB */
-        memcpy(buffer + len, msg->will_message, msg->will_message_length);
-        len += msg->will_message_length;
+        buffer[len++] = (msg->willMessageLength >> 8) & 0xFF; /* Will Message Length MSB */
+        buffer[len++] = msg->willMessageLength & 0xFF;        /* Will Message Length LSB */
+        memcpy(buffer + len, msg->willMessage, msg->willMessageLength);
+        len += msg->willMessageLength;
     }
 
     /* User Name */
-    if (msg->user_name)
+    if (msg->userName)
     {
-        buffer[len++] = (msg->user_name_length >> 8) & 0xFF; /* User Name Length MSB */
-        buffer[len++] = msg->user_name_length & 0xFF;        /* User Name Length LSB */
-        memcpy(buffer + len, msg->user_name, msg->user_name_length);
-        len += msg->user_name_length;
+        buffer[len++] = (msg->userNameLength >> 8) & 0xFF; /* User Name Length MSB */
+        buffer[len++] = msg->userNameLength & 0xFF;        /* User Name Length LSB */
+        memcpy(buffer + len, msg->userName, msg->userNameLength);
+        len += msg->userNameLength;
     }
 
     /* Password */
     if (msg->password)
     {
-        buffer[len++] = (msg->password_length >> 8) & 0xFF; /* Password Length MSB */
-        buffer[len++] = msg->password_length & 0xFF;        /* Password Length LSB */
-        memcpy(buffer + len, msg->password, msg->password_length);
-        len += msg->password_length;
+        buffer[len++] = (msg->passwordLength >> 8) & 0xFF; /* Password Length MSB */
+        buffer[len++] = msg->passwordLength & 0xFF;        /* Password Length LSB */
+        memcpy(buffer + len, msg->password, msg->passwordLength);
+        len += msg->passwordLength;
     }
 
-    *buffer_length = len;
+    *bufferLength = len;
+    return 0;
 }
 
-connect_message_t *decode_connect_message(uint8_t *buffer, uint32_t buffer_length)
+ConnectMessage_t *decode_connect_message(const uint8_t *buffer, uint32_t bufferLength)
 {
-    connect_message_t *msg = malloc(sizeof(connect_message_t));
+    ConnectMessage_t *msg = malloc(sizeof(ConnectMessage_t));
+    if (msg == NULL)
+    {
+        // Handle memory allocation failure
+        return NULL;
+    }
+
     uint32_t len = 0;
 
-    /* Decodifica el encabezado fijo */
+    /* Decode fixed header */
     msg->base.type = buffer[len++];
     msg->base.flags = buffer[len++];
 
-    /* Decodifica la longitud restante */
-    msg->base.remaining_length = 0;
+    /* Decode remaining length */
+    msg->base.remainingLength = 0;
     uint32_t multiplier = 1;
-    uint8_t encoded_byte;
+    uint8_t encodedByte;
     do
     {
-        encoded_byte = buffer[len++];
-        msg->base.remaining_length += (encoded_byte & 0x7F) * multiplier;
+        encodedByte = buffer[len++];
+        msg->base.remainingLength += (encodedByte & 0x7F) * multiplier;
         multiplier *= 128;
-    } while ((encoded_byte & 0x80) != 0);
+    } while ((encodedByte & 0x80) != 0 && len < bufferLength);
 
-    /* Decodifica el encabezado variable y la carga útil */
-    uint16_t protocol_name_length = (buffer[len++] << 8) | buffer[len++]; /* Protocol Name Length */
-    len += protocol_name_length;                                          /* Omitimos el campo Protocol Name */
+    if (len >= bufferLength)
+    {
+        // Invalid remaining length encoding
+        free_connect_message(msg);
+        return NULL;
+    }
 
-    uint8_t protocol_level = buffer[len++];                 /* Protocol Level */
-    msg->connect_flags = buffer[len++];                     /* Connect Flags */
-    msg->keep_alive = (buffer[len++] << 8) | buffer[len++]; /* Keep Alive */
+    /* Decode variable header and payload */
+    uint16_t protocolNameLength = (buffer[len++] << 8) | buffer[len++]; /* Protocol Name Length */
+    len += protocolNameLength;                                          /* Skip Protocol Name */
+
+    uint8_t protocolLevel = buffer[len++];                 /* Protocol Level */
+    msg->connectFlags = buffer[len++];                     /* Connect Flags */
+    msg->keepAlive = (buffer[len++] << 8) | buffer[len++]; /* Keep Alive */
 
     /* Client ID */
-    uint16_t client_id_length = (buffer[len++] << 8) | buffer[len++]; /* Client ID Length */
-    strncpy(msg->client_id, (char *)(buffer + len), client_id_length);
-    msg->client_id[client_id_length] = '\0';
-    len += client_id_length;
+    uint16_t clientIdLength = (buffer[len++] << 8) | buffer[len++]; /* Client ID Length */
+    if (clientIdLength > MAX_CLIENT_ID_LENGTH)
+    {
+        // Handle client ID length error
+        free_connect_message(msg);
+        return NULL;
+    }
+    memcpy(msg->clientId, buffer + len, clientIdLength);
+    msg->clientId[clientIdLength] = '\0';
+    len += clientIdLength;
 
     /* Will Topic */
-    if (msg->connect_flags & WILL_FLAG)
+    if (msg->connectFlags & WILL_FLAG)
     {
-        msg->will_topic_length = (buffer[len++] << 8) | buffer[len++]; /* Will Topic Length */
-        msg->will_topic = malloc(msg->will_topic_length + 1);
-        memcpy(msg->will_topic, buffer + len, msg->will_topic_length);
-        msg->will_topic[msg->will_topic_length] = '\0';
-        len += msg->will_topic_length;
+        msg->willTopicLength = (buffer[len++] << 8) | buffer[len++]; /* Will Topic Length */
+        msg->willTopic = malloc(msg->willTopicLength + 1);
+        if (msg->willTopic == NULL)
+        {
+            // Handle memory allocation failure
+            free_connect_message(msg);
+            return NULL;
+        }
+        memcpy(msg->willTopic, buffer + len, msg->willTopicLength);
+        msg->willTopic[msg->willTopicLength] = '\0';
+        len += msg->willTopicLength;
     }
     else
     {
-        msg->will_topic_length = 0;
-        msg->will_topic = NULL;
+        msg->willTopicLength = 0;
+        msg->willTopic = NULL;
     }
 
     /* Will Message */
-    if (msg->connect_flags & WILL_FLAG)
+    if (msg->connectFlags & WILL_FLAG)
     {
-        msg->will_message_length = (buffer[len++] << 8) | buffer[len++]; /* Will Message Length */
-        msg->will_message = malloc(msg->will_message_length + 1);
-        memcpy(msg->will_message, buffer + len, msg->will_message_length);
-        msg->will_message[msg->will_message_length] = '\0';
-        len += msg->will_message_length;
+        msg->willMessageLength = (buffer[len++] << 8) | buffer[len++]; /* Will Message Length */
+        msg->willMessage = malloc(msg->willMessageLength + 1);
+        if (msg->willMessage == NULL)
+        {
+            // Handle memory allocation failure
+            free(msg->willTopic);
+            free_connect_message(msg);
+            return NULL;
+        }
+        memcpy(msg->willMessage, buffer + len, msg->willMessageLength);
+        msg->willMessage[msg->willMessageLength] = '\0';
+        len += msg->willMessageLength;
     }
     else
     {
-        msg->will_message_length = 0;
-        msg->will_message = NULL;
+        msg->willMessageLength = 0;
+        msg->willMessage = NULL;
     }
 
     /* User Name */
-    if (msg->connect_flags & USER_NAME_FLAG)
+    if (msg->connectFlags & USER_NAME_FLAG)
     {
-        msg->user_name_length = (buffer[len++] << 8) | buffer[len++]; /* User Name Length */
-        msg->user_name = malloc(msg->user_name_length + 1);
-        memcpy(msg->user_name, buffer + len, msg->user_name_length);
-        msg->user_name[msg->user_name_length] = '\0';
-        len += msg->user_name_length;
+        msg->userNameLength = (buffer[len++] << 8) | buffer[len++]; /* User Name Length */
+
+        // Check if the User Name Length is valid
+        if (msg->userNameLength > MAX_USER_NAME_LENGTH)
+        {
+            // Handle invalid User Name length
+            free_connect_message(msg);
+            return NULL;
+        }
+
+        msg->userName = malloc(msg->userNameLength + 1);
+        if (msg->userName == NULL)
+        {
+            // Handle memory allocation failure
+            free(msg->willTopic);
+            free(msg->willMessage);
+            free_connect_message(msg);
+            return NULL;
+        }
+
+        memcpy(msg->userName, buffer + len, msg->userNameLength);
+        msg->userName[msg->userNameLength] = '\0';
+        len += msg->userNameLength;
     }
     else
     {
-        msg->user_name_length = 0;
-        msg->user_name = NULL;
+        msg->userNameLength = 0;
+        msg->userName = NULL;
     }
 
     /* Password */
-    if (msg->connect_flags & PASSWORD_FLAG)
+    if (msg->connectFlags & PASSWORD_FLAG)
     {
-        msg->password_length = (buffer[len++] << 8) | buffer[len++]; /* Password Length */
-        msg->password = malloc(msg->password_length + 1);
-        memcpy(msg->password, buffer + len, msg->password_length);
-        msg->password[msg->password_length] = '\0';
-        len += msg->password_length;
+        msg->passwordLength = (buffer[len++] << 8) | buffer[len++]; /* Password Length */
+        msg->password = malloc(msg->passwordLength + 1);
+        if (msg->password == NULL)
+        {
+            // Handle memory allocation failure
+            free(msg->willTopic);
+            free(msg->willMessage);
+            free(msg->userName);
+            free_connect_message(msg);
+            return NULL;
+        }
+        memcpy(msg->password, buffer + len, msg->passwordLength);
+        msg->password[msg->passwordLength] = '\0';
+        len += msg->passwordLength;
     }
     else
     {
-        msg->password_length = 0;
+        msg->passwordLength = 0;
         msg->password = NULL;
     }
 
     return msg;
 }
 
-void free_connect_message(connect_message_t *msg)
+void free_connect_message(ConnectMessage_t *msg)
 {
     free_base_message(&msg->base);
-    if (msg->will_topic)
-        free(msg->will_topic);
-    if (msg->will_message)
-        free(msg->will_message);
-    if (msg->user_name)
-        free(msg->user_name);
-    if (msg->password)
-        free(msg->password);
+    free(msg->willTopic);
+    free(msg->willMessage);
+    free(msg->userName);
+    free(msg->password);
+    free(msg);
 }
