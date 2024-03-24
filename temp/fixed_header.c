@@ -35,7 +35,6 @@ void set_retain(struct fixed_header *header, unsigned char value)
 void set_qos(struct fixed_header *header, unsigned char value)
 {
     header->byte = (header->byte & ~QOS_MASK) | ((value << 1) & QOS_MASK);
-    printf("%d\n", header->byte);
 }
 
 void set_dup(struct fixed_header *header, unsigned char value)

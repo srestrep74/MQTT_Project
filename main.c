@@ -3,7 +3,7 @@
 int main()
 {
 
-    message *new_message = malloc(sizeof(message));
+    struct message *new_message;
 
     set_fixed_header(new_message);
     set_variable_header(new_message);
