@@ -3,7 +3,7 @@
 void set_fixed_header(message *message)
 {
     message->fixed_header = malloc(sizeof(struct fixed_header));
-    initialize_fixed_header(&message->fixed_header);
+    initialize_fixed_header(message->fixed_header);
     set_retain(&message->fixed_header, 0);
     set_qos(&message->fixed_header, QOS);
     set_dup(&message->fixed_header, 0);

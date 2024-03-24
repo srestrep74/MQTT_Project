@@ -9,5 +9,7 @@ int main()
     set_variable_header(new_message);
     set_payload(new_message);
 
+    printf("%d\n", new_message->fixed_header->byte);
+
     return 0;
 }
