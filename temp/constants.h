@@ -2,25 +2,25 @@
 #define CONSTANTS_H
 
 #define RESERVED 0x00
-#define CONNECT 0x10
-#define CONNACK 0x20
-#define PUBLISH 0x30
-#define PUBACK 0x40
-#define PUBREC 0x50
-#define PUBREL 0x60
-#define PUBCOMP 0x70
-#define SUBSCRIBE 0x80
-#define SUBACK 0x90
-#define UNSUBSCRIBE 0xA0
-#define UNSUBACK 0xB0
-#define PINGREQ 0xC0
-#define PINGRESP 0xD0
-#define DISCONNECT 0xE0
+#define CONNECT 0x01
+#define CONNACK 0x02
+#define PUBLISH 0x03
+#define PUBACK 0x04
+#define PUBREC 0x05
+#define PUBREL 0x06
+#define PUBCOMP 0x07
+#define SUBSCRIBE 0x08
+#define SUBACK 0x09
+#define UNSUBSCRIBE 0x0A
+#define UNSUBACK 0x0B
+#define PINGREQ 0x0C
+#define PINGRESP 0x0D
+#define DISCONNECT 0x0E
 
-#define QOS 0x20
+#define QOS 0x02
 
 #define PROTOCOL_NAME "MQIdsp"
 
-#define VERSION 0x30
+#define VERSION 0x03
 
 #endif

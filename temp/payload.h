@@ -23,13 +23,13 @@ union payload
     {
         struct subscribe
         {
-            int8_t length_MSB;
-            int8_t length_LSB;
-            char *topic_name;
+            int8_t subscribe_length_MSB;
+            int8_t subscribe_length_LSB;
+            char *subscribe_topic_name;
             int8_t requested_qos;
         };
-        struct subscribe *list;
-        int size;
+        struct subscribe *subscribe_list;
+        int subscribe_size;
     };
 
     struct suback_list_payload
@@ -38,20 +38,20 @@ union payload
         {
             int8_t granted_qos;
         };
-        struct suback *list;
-        int size;
+        struct suback *suback_list;
+        int suback_size;
     };
 
     struct unsubscribe_list_payload
     {
         struct unsubscribe
         {
-            int8_t length_MSB;
-            int8_t length_LSB;
-            char *topic_name;
+            int8_t unsubscribe_length_MSB;
+            int8_t unsubscribe_length_LSB;
+            char *unsubscribe_topic_name;
         };
-        struct unsubscribe *list;
-        int size;
+        struct unsubscribe *unsubscribe_list;
+        int unsubscribe_size;
     };
 };
 

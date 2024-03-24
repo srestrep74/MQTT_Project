@@ -7,8 +7,8 @@ union variable_header
 {
     struct connect_variable_h
     {
-        int8_t length_MSB;
-        int8_t length_LSB;
+        int8_t connect_length_MSB;
+        int8_t connect_length_LSB;
         char protocol_name[7];
         // int8_t protocol_name[6];
         int8_t version;
@@ -25,8 +25,8 @@ union variable_header
 
     struct publish_variable_h
     {
-        int8_t length_MSB;
-        int8_t length_LSB;
+        int8_t publish_length_MSB;
+        int8_t publish_length_LSB;
         char *topic_name;
         int8_t message_id_MSB;
         int8_t message_id_LSB;
@@ -34,20 +34,20 @@ union variable_header
 
     struct ack_variable_h
     {
-        int8_t message_id_MSB;
-        int8_t message_id_LSB;
+        int8_t ack_message_id_MSB;
+        int8_t ack_message_id_LSB;
     };
 
     struct subscribe_variable_h
     {
-        int8_t message_id_MSB;
-        int8_t message_id_LSB;
+        int8_t subscribe_message_id_MSB;
+        int8_t subscribe_message_id_LSB;
     };
 
     struct unsubscribe_variable_h
     {
-        int8_t message_id_MSB;
-        int8_t message_id_LSB;
+        int8_t unsubscribe_message_id_MSB;
+        int8_t unsubscribe_message_id_LSB;
     };
 };
 

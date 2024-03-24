@@ -1,5 +1,6 @@
 {
-    "files.associations": {
-        "variable_header.h": "c"
-    }
+  "files.associations": {
+    "variable_header.h": "c",
+    "message.h": "c"
+  }
 }
