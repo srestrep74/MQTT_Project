@@ -1,5 +1,5 @@
-#ifndef TYPES_MESSAGES_H
-#define TYPES_MESSAGES_H
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
 
 #define RESERVED 0x00
 #define CONNECT 0x10
@@ -16,5 +16,11 @@
 #define PINGREQ 0xC0
 #define PINGRESP 0xD0
 #define DISCONNECT 0xE0
+
+#define QOS 0x20
+
+#define PROTOCOL_NAME "MQIdsp"
+
+#define VERSION 0x30
 
 #endif
