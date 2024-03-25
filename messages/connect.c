@@ -1,20 +1,22 @@
-#include "message.h"
+#include "connect.h"
+#include <stdlib.h>
+#include <string.h>
 
-void set_fixed_header(message *message)
+void set_fixed_header_connect(message *message)
 {
     message->fixed_header = malloc(sizeof(struct fixed_header));
     initialize_fixed_header(message->fixed_header);
-    set_retain(&message->fixed_header, 0);
-    set_qos(&message->fixed_header, QOS);
-    set_dup(&message->fixed_header, 0);
-    set_type(&message->fixed_header, CONNECT);
+    set_retain(message->fixed_header, 0);
+    set_qos(message->fixed_header, QOS);
+    set_dup(message->fixed_header, 0);
+    set_type(message->fixed_header, CONNECT);
 }
 
-void set_variable_header(message *message)
+void set_variable_header_connect(message *message)
 {
     message->variable_header = malloc(sizeof(union variable_header));
-    message->variable_header->connect_variable_h.length_MSB = 0;
-    message->variable_header->connect_variable_h.length_LSB = 6;
+    message->variable_header->connect_variable_h.connect_length_MSB = 0;
+    message->variable_header->connect_variable_h.connect_length_LSB = 6;
     strcpy(message->variable_header->connect_variable_h.protocol_name, PROTOCOL_NAME);
     message->variable_header->connect_variable_h.version = VERSION;
 
@@ -33,7 +35,7 @@ void set_variable_header(message *message)
     message->variable_header->connect_variable_h.keep_alive_LSB = 10;
 }
 
-void set_payload(message *message)
+void set_payload_connect(message *message)
 {
     message->payload = malloc(sizeof(union payload));
     message->payload->connect_payload.user_name = "username";
