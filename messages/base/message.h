@@ -1,10 +1,10 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include "constants.h"
-#include "fixed_header.h"
-#include "variable_header.h"
-#include "payload.h"
+#include "../constants.h"
+#include "../headers/fixed_header.h"
+#include "../headers/variable_header.h"
+#include "../headers/payload.h"
 
 typedef struct message
 {

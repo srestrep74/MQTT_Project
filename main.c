@@ -1,18 +1,15 @@
-#include "messages/message.h"
+#include "messages/base/message.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 int main()
 {
-
     message connect_msg;
     connect_msg.type = CONNECT;
     initialize_message(&connect_msg);
     connect_msg.set_fixed_header(&connect_msg);
     connect_msg.set_variable_header(&connect_msg);
     connect_msg.set_payload(&connect_msg);
-
-    printf("%d\n", get_type(*connect_msg.fixed_header));
 
     message connack_msg;
     connack_msg.type = CONNACK;

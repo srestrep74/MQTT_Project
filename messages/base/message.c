@@ -1,6 +1,7 @@
+#include <stddef.h>
 #include "message.h"
-#include "connect.h"
-#include "connack.h"
+#include "../connect/connect.h"
+#include "../connack/connack.h"
 
 void initialize_message(message *msg)
 {
@@ -17,5 +18,15 @@ void initialize_message(message *msg)
         msg->set_payload = set_payload_connack;
         break;
         // Agrega más casos según sea necesario
+    }
+}
+
+void destroy_message(message *msg)
+{
+    if (msg != NULL)
+    {
+        free(msg->fixed_header);
+        free(msg->variable_header);
+        free(msg->payload);
     }
 }
