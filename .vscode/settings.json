@@ -4,6 +4,7 @@
     "message.h": "c",
     "uft8.h": "c",
     "string.h": "c",
-    "connect.h": "c"
+    "connect.h": "c",
+    "system_error": "c"
   }
 }

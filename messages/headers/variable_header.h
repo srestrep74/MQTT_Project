@@ -30,7 +30,7 @@ union variable_header
         char *topic_name;
         int8_t message_id_MSB;
         int8_t message_id_LSB;
-    };
+    } publish_variable_h;
 
     struct ack_variable_h
     {

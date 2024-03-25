@@ -2,6 +2,7 @@
 #include "message.h"
 #include "../connect/connect.h"
 #include "../connack/connack.h"
+#include "../publish/publish.h"
 
 void initialize_message(message *msg)
 {
@@ -17,7 +18,11 @@ void initialize_message(message *msg)
         msg->set_variable_header = set_variable_header_connack;
         msg->set_payload = set_payload_connack;
         break;
-        // Agrega más casos según sea necesario
+    case PUBLISH:
+        msg->set_fixed_header = set_fixed_header_publish;
+        msg->set_variable_header = set_variable_header_publish;
+        msg->set_payload = set_payload_publish;
+        break;
     }
 }
 

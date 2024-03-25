@@ -17,7 +17,7 @@ union payload
     struct publish_payload
     {
         char *data;
-    };
+    } publish_payload;
 
     struct subscribe_list_payload
     {

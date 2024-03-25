@@ -18,7 +18,14 @@ int main()
     connack_msg.set_variable_header(&connack_msg);
     connack_msg.set_payload(&connack_msg);
 
-    printf("%d\n", get_type(*connack_msg.fixed_header));
+    message pub_msg;
+    pub_msg.type = PUBLISH;
+    initialize_message(&pub_msg);
+    pub_msg.set_fixed_header(&pub_msg);
+    pub_msg.set_variable_header(&pub_msg);
+    pub_msg.set_payload(&pub_msg);
+
+    printf("%s\n", pub_msg.payload->publish_payload.data);
 
     return 0;
 }
