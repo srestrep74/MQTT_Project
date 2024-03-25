@@ -1,6 +1,8 @@
 {
   "files.associations": {
     "variable_header.h": "c",
-    "message.h": "c"
+    "message.h": "c",
+    "uft8.h": "c",
+    "string.h": "c"
   }
 }
