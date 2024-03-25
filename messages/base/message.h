@@ -19,5 +19,6 @@ typedef struct message
 
 void initialize_message(message *msg);
 void destroy_message(message *msg);
+int calculate_total_length(message *msg);
 
 #endif

@@ -10,7 +10,6 @@ union variable_header
         int8_t connect_length_MSB;
         int8_t connect_length_LSB;
         char protocol_name[7];
-        // int8_t protocol_name[6];
         int8_t version;
         int8_t flags;
         int8_t keep_alive_MSB;

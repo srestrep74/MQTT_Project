@@ -11,5 +11,6 @@
 #define HELO_COMMAND "HELO"
 #define QUIT_COMMAND "QUIT"
 #define DATA_COMMAND "DATA"
+#define CONNECT_COMMAND "CONNECT"
 
 #endif // CONSTANTS_H

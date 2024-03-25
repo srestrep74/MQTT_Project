@@ -1,9 +1,10 @@
 #include "fixed_header.h"
+#include <string.h>
 
 void initialize_fixed_header(struct fixed_header *header)
 {
     header->byte = 0;
-    header->remaining_length = 0;
+    memset(header->remaining_length, 0, 4);
 }
 
 unsigned char get_retain(struct fixed_header header)
@@ -47,7 +48,7 @@ void set_type(struct fixed_header *header, unsigned char value)
     header->byte = (header->byte & ~TYPE_MASK) | ((value << 4) & TYPE_MASK);
 }
 
-int encode_remaining_length(int remaining_length, uint8_t *encoded_data)
+int encode_remaining_length(int8_t remaining_length, uint8_t *encoded_data)
 {
     int i = 0;
     do
@@ -63,7 +64,7 @@ int encode_remaining_length(int remaining_length, uint8_t *encoded_data)
     return i;
 }
 
-int decode_remaining_length(const uint8_t *encoded_data, int *decoded_length)
+int decode_remaining_length(uint8_t *encoded_data, int *decoded_length)
 {
     int multiplier = 1;
     *decoded_length = 0;

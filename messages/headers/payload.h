@@ -1,17 +1,18 @@
 #ifndef PAYLOAD_H
 #define PAYLOAD_H
 
+#include "../../encoders/utf8.h"
 #include <stdint.h>
 
 union payload
 {
     struct connect_payload
     {
-        char *client_identifier;
-        char *will_topic;
-        char *will_message;
-        char *user_name;
-        char *password;
+        utf8_string client_identifier;
+        utf8_string will_topic;
+        utf8_string will_message;
+        utf8_string user_name;
+        utf8_string password;
     } connect_payload;
 
     struct publish_payload

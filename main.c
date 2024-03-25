@@ -1,6 +1,21 @@
 #include "messages/base/message.h"
+#include "encoders/fixed_header.h"
+#include "encoders/utf8.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+void print_encoded_remaining_length(const uint8_t *encoded_data, int encoded_length)
+{
+    printf("Encoded remaining length: ");
+    for (int i = 0; i < encoded_length; i++)
+    {
+        for (int j = 7; j >= 0; j--)
+            printf("%d ", (encoded_data[i] >> j) & 1);
+
+        printf(" ");
+    }
+    printf("\n");
+}
 
 int main()
 {
@@ -10,22 +25,7 @@ int main()
     connect_msg.set_fixed_header(&connect_msg);
     connect_msg.set_variable_header(&connect_msg);
     connect_msg.set_payload(&connect_msg);
-
-    message connack_msg;
-    connack_msg.type = CONNACK;
-    initialize_message(&connack_msg);
-    connack_msg.set_fixed_header(&connack_msg);
-    connack_msg.set_variable_header(&connack_msg);
-    connack_msg.set_payload(&connack_msg);
-
-    message pub_msg;
-    pub_msg.type = PUBLISH;
-    initialize_message(&pub_msg);
-    pub_msg.set_fixed_header(&pub_msg);
-    pub_msg.set_variable_header(&pub_msg);
-    pub_msg.set_payload(&pub_msg);
-
-    printf("%s\n", pub_msg.payload->publish_payload.data);
+    encode(&connect_msg);
 
     return 0;
 }

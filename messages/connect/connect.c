@@ -38,9 +38,9 @@ void set_variable_header_connect(message *message)
 void set_payload_connect(message *message)
 {
     message->payload = malloc(sizeof(union payload));
-    message->payload->connect_payload.user_name = "username";
-    message->payload->connect_payload.password = "password";
-    message->payload->connect_payload.client_identifier = "123";
-    message->payload->connect_payload.will_message = "Hola mundo";
-    message->payload->connect_payload.will_topic = "test";
+    encode_string("username", &message->payload->connect_payload.user_name);
+    encode_string("password", &message->payload->connect_payload.password);
+    encode_string("123", &message->payload->connect_payload.client_identifier);
+    encode_string("Hello", &message->payload->connect_payload.will_message);
+    encode_string("test", &message->payload->connect_payload.will_topic);
 }

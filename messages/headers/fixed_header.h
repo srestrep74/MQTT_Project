@@ -11,7 +11,7 @@
 struct fixed_header
 {
     int8_t byte;
-    int8_t remaining_length;
+    int8_t remaining_length[4];
 };
 
 void initialize_fixed_header(struct fixed_header *header);
@@ -28,7 +28,7 @@ void set_qos(struct fixed_header *header, unsigned char value);
 void set_dup(struct fixed_header *header, unsigned char value);
 void set_type(struct fixed_header *header, unsigned char value);
 
-int encode_remaining_length(int remaining_length, uint8_t *encoded_data);
-int decode_remaining_length(const uint8_t *encoded_data, int *decoded_length);
+int encode_remaining_length(int8_t remaining_length, uint8_t *encoded_data);
+int decode_remaining_length(uint8_t *encoded_data, int *decoded_length);
 
 #endif
