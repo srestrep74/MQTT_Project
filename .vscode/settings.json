@@ -5,6 +5,7 @@
     "uft8.h": "c",
     "string.h": "c",
     "connect.h": "c",
-    "system_error": "c"
+    "system_error": "c",
+    "client_constants.h": "c"
   }
 }

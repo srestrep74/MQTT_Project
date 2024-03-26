@@ -28,12 +28,15 @@ int main()
     connect_msg.set_payload(&connect_msg);
     encode(&connect_msg);
 
-    char serialized_message[1024];
-    size_t serialized_size = serialize_message(&connect_msg, serialized_message, sizeof(serialized_message));
+    char buffer[1024];
+    size_t serialized_size = serialize_message(&connect_msg, buffer, sizeof(buffer));
 
-    message received_msg;
-    deserialize_message(serialized_message, serialized_size, &received_msg);
-    printf("Tipo de mensaje recibido: %d\n", received_msg.fixed_header->byte);
+    message msg;
+    deserialize_message(buffer, serialized_size, &msg);
+    char *username;
+    decode_string(&msg.payload->connect_payload.user_name, &username);
+
+    printf("Tipo de mensaje recibido: %s\n", username);
 
     return 0;
 }
