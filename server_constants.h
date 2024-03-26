@@ -1,6 +1,6 @@
 // constants.h
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef SERVER_CONSTANTS_H
+#define SERVER_CONSTANTS_H
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080

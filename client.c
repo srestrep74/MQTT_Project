@@ -8,7 +8,7 @@
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
 
-#include "constants.h"
+#include "server_constants.h"
 
 #define COMMAND_BUFFER_SIZE (BUFFER_SIZE * 2)
 
@@ -80,9 +80,9 @@ int main()
             message connect_msg;
             connect_msg.type = CONNECT;
             initialize_message(&connect_msg);
-            set_fixed_header(&connect_msg);
-            set_variable_header(&connect_msg);
-            set_payload(&connect_msg);
+            connect_msg.set_fixed_header(&connect_msg);
+            connect_msg.set_variable_header(&connect_msg);
+            connect_msg.set_payload(&connect_msg);
             encode(&connect_msg);
 
             // Enviar el mensaje
