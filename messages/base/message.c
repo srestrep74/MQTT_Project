@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdlib.h>
 #include "message.h"
 #include "../connect/connect.h"
 #include "../connack/connack.h"
