@@ -11,6 +11,7 @@
 #include "encoders/utf8.h"
 #include "encoders/packet.h"
 
+#include "constants.h"
 #include "server_constants.h" // Include the constants header file
 
 // Function prototypes
