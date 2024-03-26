@@ -6,7 +6,12 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-#include "constants.h" // Include the constants header file
+#include "messages/base/message.h"
+#include "encoders/fixed_header.h"
+#include "encoders/utf8.h"
+#include "encoders/packet.h"
+#include "constants.h"
+#include "server_constants.h" // Include the constants header file
 
 // Function prototypes
 void *client_handler(void *client_socket);

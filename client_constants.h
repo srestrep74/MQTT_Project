@@ -1,8 +1,8 @@
 // constants.h
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef SERVER_CONSTANTS_H
+#define SERVER_CONSTANTS_H
 
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "54.235.18.199"
 #define SERVER_PORT 8080
 #define MAX_CLIENTS 5
 #define BUFFER_SIZE 1024

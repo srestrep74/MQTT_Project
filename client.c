@@ -4,8 +4,12 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "messages/base/message.h"
+#include "encoders/fixed_header.h"
+#include "encoders/utf8.h"
+#include "encoders/packet.h"
 
-#include "constants.h"
+#include "client_constants.h"
 
 #define COMMAND_BUFFER_SIZE (BUFFER_SIZE * 2)
 
@@ -51,25 +55,24 @@ int main()
         {
             break;
         }
-        else if (strcmp(buffer, DATA_COMMAND) == 0)
+        else if (strcmp(buffer, CONNECT_COMMAND) == 0)
         {
-            printf("Input data to send: ");
-            fgets(buffer, BUFFER_SIZE, stdin);
-            buffer[strcspn(buffer, "\n")] = '\0'; // Remove the newline character
+            snprintf(command_and_data, COMMAND_BUFFER_SIZE, "%s %s", CONNECT_COMMAND, buffer);
+            message connect_msg;
+            connect_msg.type = CONNECT;
+            initialize_message(&connect_msg);
+            connect_msg.set_fixed_header(&connect_msg);
+            connect_msg.set_variable_header(&connect_msg);
+            connect_msg.set_payload(&connect_msg);
+            encode(&connect_msg);
 
-            snprintf(command_and_data, COMMAND_BUFFER_SIZE, "%s %s", DATA_COMMAND, buffer);
-            send(client_socket, command_and_data, strlen(command_and_data), 0);
+            printf("Type : %d\n", connect_msg.type);
+            char buffer[1024];
+            size_t serialized_size = serialize_message(&connect_msg, buffer, sizeof(buffer));
 
-            memset(buffer, 0, BUFFER_SIZE);
-            ssize_t bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-            if (bytes_received == -1)
-            {
-                perror("Failed to receive data");
-                break;
-            }
-
-            buffer[bytes_received] = '\0';
-            printf("%s\n", buffer);
+            // Enviar el mensaje
+            send(client_socket, &serialized_size, sizeof(serialized_size), 0);
+            send(client_socket, buffer, serialized_size, 0);
         }
         else
         {
