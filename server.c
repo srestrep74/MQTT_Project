@@ -6,7 +6,11 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-#include "constants.h" // Include the constants header file
+#include "messages/base/message.h"
+#include "encoders/fixed_header.h"
+#include "encoders/utf8.h"
+
+#include "server_constants.h" // Include the constants header file
 
 // Function prototypes
 void *client_handler(void *client_socket);
@@ -121,6 +125,15 @@ void *client_handler(void *client_socket_ptr)
         else if (strcmp(command, DATA_COMMAND) == 0)
         {
             const char *response = "300 DRCV\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+        else if (strcmp(command, CONNECT_COMMAND) == 0)
+        {
+            message *connect_msg;
+            recv(client_socket, &connect_msg, sizeof(message), 0);
+            printf("%d\n", connect_msg->type);
+
+            const char *response = "500 CONNECTED\n";
             send(client_socket, response, strlen(response), 0);
         }
         else
