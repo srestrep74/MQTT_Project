@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "messages/base/message.h"
+#include "encoders/fixed_header.h"
+#include "encoders/utf8.h"
 
 #include "constants.h"
 
@@ -70,6 +73,20 @@ int main()
 
             buffer[bytes_received] = '\0';
             printf("%s\n", buffer);
+        }
+        else if (strcmp(buffer, CONNECT_COMMAND) == 0)
+        {
+            snprintf(command_and_data, COMMAND_BUFFER_SIZE, "%s %s", DATA_COMMAND, buffer);
+            message connect_msg;
+            connect_msg.type = CONNECT;
+            initialize_message(&connect_msg);
+            set_fixed_header(&connect_msg);
+            set_variable_header(&connect_msg);
+            set_payload(&connect_msg);
+            encode(&connect_msg);
+
+            // Enviar el mensaje
+            send(client_socket, &connect_msg, sizeof(connect_msg), 0);
         }
         else
         {
