@@ -9,6 +9,7 @@
 #include "messages/base/message.h"
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
+#include "encoders/packet.h"
 
 #include "server_constants.h" // Include the constants header file
 
@@ -129,10 +130,6 @@ void *client_handler(void *client_socket_ptr)
         }
         else if (strcmp(command, CONNECT_COMMAND) == 0)
         {
-            message *connect_msg;
-            recv(client_socket, &connect_msg, sizeof(message), 0);
-            printf("%d\n", connect_msg->type);
-
             const char *response = "500 CONNECTED\n";
             send(client_socket, response, strlen(response), 0);
         }

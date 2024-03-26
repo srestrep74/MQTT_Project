@@ -7,6 +7,7 @@
 #include "messages/base/message.h"
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
+#include "encoders/packet.h"
 
 #include "server_constants.h"
 
@@ -84,9 +85,11 @@ int main()
             connect_msg.set_variable_header(&connect_msg);
             connect_msg.set_payload(&connect_msg);
             encode(&connect_msg);
+            char serialized_message[1024];
+            size_t serialized_size = serialize_message(&connect_msg, serialized_message, sizeof(serialized_message));
 
             // Enviar el mensaje
-            send(client_socket, &connect_msg, sizeof(connect_msg), 0);
+            send(client_socket, serialize_message, sizeof(serialize_message), 0);
         }
         else
         {
