@@ -10,7 +10,6 @@
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
 #include "encoders/packet.h"
-#include "constants.h"
 #include "server_constants.h" // Include the constants header file
 
 // Function prototypes
@@ -126,6 +125,36 @@ void *client_handler(void *client_socket_ptr)
         else if (strcmp(command, DATA_COMMAND) == 0)
         {
             const char *response = "300 DRCV\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+        else if (strcmp(command, CONNECT_COMMAND) == 0)
+        {
+            // Recibir el comando CONNECT como un string
+            printf("Received command: %s\n", buffer);
+
+            // Luego, recibir la estructura del mensaje CONNECT
+            // Recibir la longitud de los datos del cliente
+            size_t data_length;
+            recv(client_socket, &data_length, sizeof(data_length), 0);
+
+            // Recibir los datos serializados del cliente
+            char serialized_msg[data_length];
+            recv(client_socket, serialized_msg, data_length, 0);
+            for (size_t i = 0; i < data_length; i++)
+            {
+                printf("%02X ", (unsigned char)serialized_msg[i]);
+            }
+            printf("\n");
+
+            // Deserializar el mensaje CONNECT
+            message received_msg;
+            memcpy(&received_msg, serialized_msg, sizeof(received_msg));
+
+            // Procesar el mensaje CONNECT
+            // Aquí deberías verificar los campos del mensaje recibido y realizar las acciones correspondientes
+
+            // Enviar la respuesta al cliente
+            const char *response = "500 CONNECT\n";
             send(client_socket, response, strlen(response), 0);
         }
         else
