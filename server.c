@@ -11,7 +11,6 @@
 #include "encoders/utf8.h"
 #include "encoders/packet.h"
 
-#include "constants.h"
 #include "server_constants.h" // Include the constants header file
 
 // Function prototypes
@@ -107,7 +106,6 @@ void *client_handler(void *client_socket_ptr)
             printf("Client disconnected\n");
             break;
         }
-
         buffer[bytes_received] = '\0';
         printf("Received data: %s\n", buffer);
 
@@ -133,6 +131,20 @@ void *client_handler(void *client_socket_ptr)
         {
             const char *response = "500 CONNECTED\n";
             send(client_socket, response, strlen(response), 0);
+
+            message connect_msg;
+           size_t received_size;
+           recv(client_socket, &received_size, sizeof(received_size), 0);
+           printf("Received size: %zu\n", received_size);
+           char r_buffer[1024];
+           recv(client_socket,&r_buffer, received_size, 0);
+         printf("%s","HOLA");
+           deserialize_message(r_buffer, received_size, &connect_msg);        
+ 
+           char *username;
+           decode_string(&connect_msg.payload->connect_payload.user_name, &username);
+ 
+           printf("Tipo de mensaje recibido: %s\n", username);
         }
         else
         {
