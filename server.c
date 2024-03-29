@@ -4,155 +4,116 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <pthread.h>
-
+#include <inttypes.h>
 #include "messages/base/message.h"
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
 #include "encoders/packet.h"
+#include "server_constants.h"
+#define TOTAL_FIELDS_EXPECTED 16
 
-#include "server_constants.h" // Include the constants header file
-
-// Function prototypes
-void *client_handler(void *client_socket);
-
-int main()
-{
-    int server_socket, client_socket;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len;
-    pthread_t threads[MAX_CLIENTS];
-    int thread_count = 0;
-
-    // Create the server socket
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == -1)
-    {
-        perror("Failed to create socket");
-        exit(EXIT_FAILURE);
+void print_fixed_header(const struct fixed_header *header) {
+    printf("Fixed Header:\n");
+    printf("  Raw Data:");
+    for (size_t i = 0; i < sizeof(struct fixed_header); ++i) {
+        printf(" %02X", ((unsigned char *)header)[i]);
     }
-
-    // Configure the server address
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-    server_addr.sin_port = htons(SERVER_PORT);
-
-    // Bind the server socket to the address
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
-    {
-        perror("Failed to bind socket");
-        exit(EXIT_FAILURE);
-    }
-
-    // Listen for incoming connections
-    if (listen(server_socket, MAX_CLIENTS) == -1)
-    {
-        perror("Failed to listen");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Server is running on %s:%d\n", SERVER_IP, SERVER_PORT);
-
-    while (1)
-    {
-        printf("Waiting for incoming connections...\n");
-
-        // Accept an incoming connection
-        client_len = sizeof(client_addr);
-        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
-        if (client_socket == -1)
-        {
-            perror("Failed to accept connection");
-            continue;
-        }
-
-        printf("New connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-
-        // Create a new thread to handle the client
-        if (thread_count < MAX_CLIENTS)
-        {
-            pthread_create(&threads[thread_count++], NULL, client_handler, (void *)&client_socket);
-        }
-        else
-        {
-            printf("Maximum number of clients reached. Connection rejected.\n");
-            close(client_socket);
-        }
-    }
-
-    // Clean up
-    close(server_socket);
-    return 0;
+    printf("\n");
 }
 
-void *client_handler(void *client_socket_ptr)
-{
-    int client_socket = *(int *)client_socket_ptr;
-    char buffer[BUFFER_SIZE];
-    ssize_t bytes_received;
-
-    while (1)
-    {
-        // Receive data from the client
-        bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-        if (bytes_received == -1)
-        {
-            perror("Failed to receive data");
-            break;
-        }
-        else if (bytes_received == 0)
-        {
-            printf("Client disconnected\n");
-            break;
-        }
-        buffer[bytes_received] = '\0';
-        printf("Received data: %s\n", buffer);
-
-        // Process the received data and send a response
-        char *command = strtok(buffer, " ");
-        if (strcmp(command, HELO_COMMAND) == 0)
-        {
-            const char *response = "100 OK\n";
-            send(client_socket, response, strlen(response), 0);
-        }
-        else if (strcmp(command, QUIT_COMMAND) == 0)
-        {
-            const char *response = "200 BYE\n";
-            send(client_socket, response, strlen(response), 0);
-            break;
-        }
-        else if (strcmp(command, DATA_COMMAND) == 0)
-        {
-            const char *response = "300 DRCV\n";
-            send(client_socket, response, strlen(response), 0);
-        }
-        else if (strcmp(command, CONNECT_COMMAND) == 0)
-        {
-            const char *response = "500 CONNECTED\n";
-            send(client_socket, response, strlen(response), 0);
-
-            message connect_msg;
-           size_t received_size;
-           recv(client_socket, &received_size, sizeof(received_size), 0);
-           printf("Received size: %zu\n", received_size);
-           char r_buffer[1024];
-           recv(client_socket,&r_buffer, received_size, 0);
-         printf("%s","HOLA");
-           deserialize_message(r_buffer, received_size, &connect_msg);        
- 
-           char *username;
-           decode_string(&connect_msg.payload->connect_payload.user_name, &username);
- 
-           printf("Tipo de mensaje recibido: %s\n", username);
-        }
-        else
-        {
-            const char *response = "400 BCMD\nCommand-Description: Bad command\n\r";
-            send(client_socket, response, strlen(response), 0);
-        }
+void print_message_fields(const message *msg) {
+    if (msg == NULL) {
+        printf("Message is NULL\n");
+        return;
     }
 
-    close(client_socket);
-    pthread_exit(NULL);
+    printf("Type: %d\n", msg->type);
+    
+    if (msg->fixed_header != NULL) {
+        printf("Fixed Header:\n");
+        printf("  Retain: %d\n", get_retain(*msg->fixed_header));
+        printf("  QoS: %d\n", get_qos(*msg->fixed_header));
+        printf("  Dup: %d\n", get_dup(*msg->fixed_header));
+        printf("  Type: %d\n", get_type(*msg->fixed_header));
+    } else {
+        printf("Fixed Header is NULL\n");
+    }
+    printf("Payload Length: %zu\n", msg->payload_length);
+}
+
+
+void deserialize_message(const char *buffer, size_t buffer_size, message *msg) {
+    if (buffer_size < sizeof(message)) {
+        perror("Tamaño de búfer insuficiente para deserializar el mensaje");
+        exit(EXIT_FAILURE);
+    }
+    memcpy(msg, buffer, buffer_size);
+}
+int main() {
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
+    char buffer[1024] = {0};
+    message msg;
+    initialize_message(&msg);
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("Socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("Setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons( SERVER_PORT );
+
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) {
+        perror("Bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(server_fd, 3) < 0) {
+        perror("Listen");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
+        perror("Accept");
+        exit(EXIT_FAILURE);
+    }
+    ssize_t bytes_read = read(new_socket, buffer, sizeof(buffer));
+    if (bytes_read < 0) {
+        perror("Error al leer del socket");
+        exit(EXIT_FAILURE);
+    }
+    printf("%ld\n", bytes_read);
+    int total_length;
+    memcpy(&total_length, buffer, sizeof(int));
+
+    char *message_buffer = malloc(total_length);
+    if (message_buffer == NULL) {
+        perror("Error al asignar memoria para el mensaje");
+        exit(EXIT_FAILURE);
+    }
+
+    ssize_t total_bytes_read = 0;
+    while (total_bytes_read < total_length) {
+        ssize_t bytes_read = read(new_socket, message_buffer + total_bytes_read, total_length - total_bytes_read);
+        if (bytes_read < 0) {
+            perror("Error al leer del socket");
+            exit(EXIT_FAILURE);
+        } else if (bytes_read == 0) {
+            printf("El cliente ha cerrado la conexión\n");
+            exit(EXIT_FAILURE);
+        }
+        total_bytes_read += bytes_read;
+    }
+    printf("%ld\n", total_bytes_read);
+    printf("hola");
+    deserialize_message(message_buffer, total_length, &msg);  
+    print_message_fields(&msg);
+    free(message_buffer);
 }

@@ -5,6 +5,7 @@
 #include "../headers/fixed_header.h"
 #include "../headers/variable_header.h"
 #include "../headers/payload.h"
+#include <stddef.h>
 
 typedef struct message
 {
@@ -12,6 +13,7 @@ typedef struct message
     struct fixed_header *fixed_header;
     union variable_header *variable_header;
     union payload *payload;
+    size_t payload_length;
     void (*set_fixed_header)(struct message *);
     void (*set_variable_header)(struct message *);
     void (*set_payload)(struct message *);
