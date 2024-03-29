@@ -16,7 +16,6 @@ void set_variable_header_publish(message *message)
 {
     message->variable_header = malloc(sizeof(union variable_header));
     message->variable_header->publish_variable_h.publish_length_MSB = 0;
-    message->variable_header->publish_variable_h.topic_name = "topic";
     message->variable_header->publish_variable_h.publish_length_LSB = sizeof(message->variable_header->publish_variable_h.topic_name);
     message->variable_header->publish_variable_h.message_id_MSB = 0;
     message->variable_header->publish_variable_h.message_id_LSB = 10;
@@ -25,5 +24,14 @@ void set_variable_header_publish(message *message)
 void set_payload_publish(message *message)
 {
     message->payload = malloc(sizeof(union payload));
-    message->payload->publish_payload.data = "Hello";
+}
+
+void set_topic(message *message, char *topic)
+{
+    message->variable_header->publish_variable_h.topic_name = topic;
+}
+
+void set_data(message *message, char *data)
+{
+    message->payload->publish_payload.data = data;
 }
