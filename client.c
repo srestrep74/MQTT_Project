@@ -7,7 +7,6 @@
 #include "messages/base/message.h"
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
-#include "encoders/packet.h"
 
 #include "client_constants.h"
 

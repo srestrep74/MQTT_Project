@@ -2,45 +2,10 @@
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
 #include "encoders/packet.h"
-#include "broker/topic.h"
 #include "broker/trie.h"
 #include <stdlib.h>
 #include <stdio.h>
-
-// Función auxiliar para imprimir la estructura del árbol de tópicos recursivamente
-void print_topic_tree_helper(TopicNode *node, int depth)
-{
-    // Imprimir el nombre del tópico con sangría según la profundidad
-    for (int i = 0; i < depth; i++)
-    {
-        printf("  ");
-    }
-    printf("|-- %s\n", node->topic_name);
-
-    // Recorrer los hijos del nodo actual
-    TopicNode *child = node->children;
-    while (child != NULL)
-    {
-        // Llamar recursivamente a esta función para imprimir los hijos
-        print_topic_tree_helper(child, depth + 1);
-        child = child->next_sibling;
-    }
-}
-
-// Función para imprimir la estructura del árbol de tópicos
-void print_topic_tree(TopicNode *root)
-{
-    printf("Estructura del árbol de tópicos:\n");
-    // Comenzar el recorrido desde el nodo raíz
-    if (root != NULL)
-    {
-        print_topic_tree_helper(root, 0);
-    }
-    else
-    {
-        printf("El árbol de tópicos está vacío.\n");
-    }
-}
+#include "broker/log.h"
 
 int main()
 {
@@ -87,6 +52,9 @@ print_topic_tree(root);
 
 */
 
+    // Mirar bien jerarquia
+    // Filtrados
+
     TrieNode *root = createNode();
 
     // Publicar tópicos y suscribirse
@@ -116,6 +84,8 @@ print_topic_tree(root);
     insertTopic(root, "topic/sensores", "Data 2");
     topicNode = findTopicNode(root, "topic/sensores");
     printf("%s\n", topicNode->last_message);
+
+    register_request("127.0.0.1", "CONNECT", "CONNACK");
 
     return 0;
 }
