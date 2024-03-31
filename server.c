@@ -4,49 +4,24 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <inttypes.h>
+#include <pthread.h>
+
 #include "messages/base/message.h"
 #include "encoders/fixed_header.h"
 #include "encoders/utf8.h"
 #include "encoders/packet.h"
-#include "server_constants.h"
-#define TOTAL_FIELDS_EXPECTED 16
+#include "server_constants.h" // Include the constants header file
 
-void print_fixed_header(const struct fixed_header *header) {
-    printf("Fixed Header:\n");
-    printf("  Raw Data:");
-    for (size_t i = 0; i < sizeof(struct fixed_header); ++i) {
-        printf(" %02X", ((unsigned char *)header)[i]);
-    }
-    printf("\n");
-}
+// Function prototypes
+void *client_handler(void *client_socket);
 
-void print_message_fields(const message *msg) {
-    if (msg == NULL) {
-        printf("Message is NULL\n");
-        return;
-    }
-
-    printf("Type: %d\n", msg->type);
-    printf("Payload Length: %zu\n", msg->payload_length);
-}
-
-
-void deserialize_message(const char *buffer, size_t buffer_size, message *msg)
+int main()
 {
-    size_t offset = 0;
-
-    // Leer el tipo de mensaje
-    memcpy(&msg->type, buffer + offset, sizeof(int8_t));
-    offset += sizeof(int8_t);
-
-    // Leer el fixed header
-    memcpy(&msg->fixed_header, buffer + offset, sizeof(msg->fixed_header));
-    offset += sizeof(msg->fixed_header);
-
-    // Leer el variable header
-    memcpy(&msg->variable_header, buffer + offset, sizeof(msg->variable_header));
-    offset += sizeof(msg->variable_header);
+    int server_socket, client_socket;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t client_len;
+    pthread_t threads[MAX_CLIENTS];
+    int thread_count = 0;
 
     // Leer el payload
     memcpy(&msg->payload, buffer + offset, sizeof(msg->payload));
@@ -84,40 +59,119 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
-        perror("Accept");
-        exit(EXIT_FAILURE);
-    }
-    ssize_t bytes_read = read(new_socket, buffer, sizeof(buffer));
-    if (bytes_read < 0) {
-        perror("Error al leer del socket");
-        exit(EXIT_FAILURE);
-    }
-    printf("%ld\n", bytes_read);
-    int total_length;
-    memcpy(&total_length, buffer, sizeof(int));
+    printf("Server is running on %s:%d\n", SERVER_IP, SERVER_PORT);
 
-    char *message_buffer = malloc(total_length);
-    if (message_buffer == NULL) {
-        perror("Error al asignar memoria para el mensaje");
-        exit(EXIT_FAILURE);
-    }
+    while (1)
+    {
+        printf("Waiting for incoming connections...\n");
 
-    ssize_t total_bytes_read = 0;
-    while (total_bytes_read < total_length) {
-        ssize_t bytes_read = read(new_socket, message_buffer + total_bytes_read, total_length - total_bytes_read);
-        if (bytes_read < 0) {
-            perror("Error al leer del socket");
-            exit(EXIT_FAILURE);
-        } else if (bytes_read == 0) {
-            printf("El cliente ha cerrado la conexión\n");
-            exit(EXIT_FAILURE);
+        // Accept an incoming connection
+        client_len = sizeof(client_addr);
+        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
+        if (client_socket == -1)
+        {
+            perror("Failed to accept connection");
+            continue;
         }
-        total_bytes_read += bytes_read;
+
+        printf("New connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+
+        // Create a new thread to handle the client
+        if (thread_count < MAX_CLIENTS)
+        {
+            pthread_create(&threads[thread_count++], NULL, client_handler, (void *)&client_socket);
+        }
+        else
+        {
+            printf("Maximum number of clients reached. Connection rejected.\n");
+            close(client_socket);
+        }
     }
-    printf("%ld\n", total_bytes_read);
-    printf("hola");
-    deserialize_message(message_buffer, total_length, &msg);  
-    print_message_fields(&msg);
-    free(message_buffer);
+
+    // Clean up
+    close(server_socket);
+    return 0;
+}
+
+void *client_handler(void *client_socket_ptr)
+{
+    int client_socket = *(int *)client_socket_ptr;
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_received;
+
+    while (1)
+    {
+        // Receive data from the client
+        bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received == -1)
+        {
+            perror("Failed to receive data");
+            break;
+        }
+        else if (bytes_received == 0)
+        {
+            printf("Client disconnected\n");
+            break;
+        }
+
+        buffer[bytes_received] = '\0';
+        printf("Received data: %s\n", buffer);
+
+        // Process the received data and send a response
+        char *command = strtok(buffer, " ");
+        if (strcmp(command, HELO_COMMAND) == 0)
+        {
+            const char *response = "100 OK\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+        else if (strcmp(command, QUIT_COMMAND) == 0)
+        {
+            const char *response = "200 BYE\n";
+            send(client_socket, response, strlen(response), 0);
+            break;
+        }
+        else if (strcmp(command, DATA_COMMAND) == 0)
+        {
+            const char *response = "300 DRCV\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+        else if (strcmp(command, CONNECT_COMMAND) == 0)
+        {
+            // Recibir el comando CONNECT como un string
+            printf("Received command: %s\n", buffer);
+
+            // Luego, recibir la estructura del mensaje CONNECT
+            // Recibir la longitud de los datos del cliente
+            size_t data_length;
+            recv(client_socket, &data_length, sizeof(data_length), 0);
+
+            // Recibir los datos serializados del cliente
+            char serialized_msg[data_length];
+            recv(client_socket, serialized_msg, data_length, 0);
+            for (size_t i = 0; i < data_length; i++)
+            {
+                printf("%02X ", (unsigned char)serialized_msg[i]);
+            }
+            printf("\n");
+
+            // Deserializar el mensaje CONNECT
+            message received_msg;
+            memcpy(&received_msg, serialized_msg, sizeof(received_msg));
+
+            // Procesar el mensaje CONNECT
+            // Aquí deberías verificar los campos del mensaje recibido y realizar las acciones correspondientes
+
+            // Enviar la respuesta al cliente
+            const char *response = "500 CONNECT\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+        else
+        {
+            const char *response = "400 BCMD\nCommand-Description: Bad command\n\r";
+            send(client_socket, response, strlen(response), 0);
+        }
+    }
+
+    close(client_socket);
+    pthread_exit(NULL);
 }

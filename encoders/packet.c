@@ -1,6 +1,5 @@
 #include "packet.h"
 
-/*
 size_t serialize_message(const message *msg, char *buffer, size_t buffer_size)
 {
     size_t offset = 0;
@@ -43,4 +42,4 @@ void deserialize_message(const char *buffer, size_t buffer_size, message *msg)
     // Leer el payload
     memcpy(&msg->payload, buffer + offset, sizeof(msg->payload));
     offset += sizeof(msg->payload);
-}*/
+}

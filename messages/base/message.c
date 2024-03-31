@@ -4,6 +4,7 @@
 #include "../connect/connect.h"
 #include "../connack/connack.h"
 #include "../publish/publish.h"
+#include "../subscribe/subscribe.h"
 
 void initialize_message(message *msg)
 {
@@ -23,6 +24,14 @@ void initialize_message(message *msg)
         msg->set_fixed_header = set_fixed_header_publish;
         msg->set_variable_header = set_variable_header_publish;
         msg->set_payload = set_payload_publish;
+        msg->set_topic = set_topic;
+        msg->set_data = set_data;
+        break;
+    case SUBSCRIBE:
+        msg->set_fixed_header = set_fixed_header_subscribe;
+        msg->set_variable_header = set_variable_header_subscribe;
+        msg->set_payload = set_payload_subscribe;
+        msg->set_topics = set_topics;
         break;
     }
 }

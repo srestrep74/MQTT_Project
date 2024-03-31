@@ -20,18 +20,19 @@ union payload
         char *data;
     } publish_payload;
 
+    struct subscribe
+    {
+        int8_t subscribe_length_MSB;
+        int8_t subscribe_length_LSB;
+        char *subscribe_topic_name;
+        int8_t requested_qos;
+    };
+
     struct subscribe_list_payload
     {
-        struct subscribe
-        {
-            int8_t subscribe_length_MSB;
-            int8_t subscribe_length_LSB;
-            char *subscribe_topic_name;
-            int8_t requested_qos;
-        };
         struct subscribe *subscribe_list;
         int subscribe_size;
-    };
+    } sub_payload;
 
     struct suback_list_payload
     {

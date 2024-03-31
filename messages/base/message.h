@@ -17,6 +17,9 @@ typedef struct message
     void (*set_fixed_header)(struct message *);
     void (*set_variable_header)(struct message *);
     void (*set_payload)(struct message *);
+    void (*set_topic)(struct message *, char *);
+    void (*set_topics)(struct message *, char **, int);
+    void (*set_data)(struct message *, char *);
 } message;
 
 void initialize_message(message *msg);

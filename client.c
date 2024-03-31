@@ -6,111 +6,113 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "server_constants.h"
+#include "messages/base/message.h"
+#include "encoders/fixed_header.h"
+#include "encoders/utf8.h"
 
-void print_message_fields(const message *msg) {
-    printf("Type: %d\n", msg->type);
-    printf("Fixed Header:\n");
-    printf("  Retain: %d\n", get_retain(*msg->fixed_header));
-    printf("  QoS: %d\n", get_qos(*msg->fixed_header));
-    printf("  Dup: %d\n", get_dup(*msg->fixed_header));
-    printf("  Type: %d\n", get_type(*msg->fixed_header));
-    printf("Variable Header:\n");
-    printf("  Protocol Name: %s\n", msg->variable_header->connect_variable_h.protocol_name);
-    printf("  Version: %d\n", msg->variable_header->connect_variable_h.version);
-    printf("Payload Length: %zu\n", msg->payload_length);
-}
+#include "client_constants.h"
 
-size_t serialize_message(const message *msg, char *buffer, size_t buffer_size)
+#define COMMAND_BUFFER_SIZE (BUFFER_SIZE * 2)
+
+int main()
 {
-    size_t offset = 0;
+    int client_socket;
+    struct sockaddr_in server_addr;
+    char buffer[BUFFER_SIZE];
+    char command_and_data[COMMAND_BUFFER_SIZE];
 
-    // Copiar el tipo de mensaje
-    memcpy(buffer + offset, &msg->type, sizeof(int8_t));
-    offset += sizeof(int8_t);
-
-    // Copiar el fixed header
-    memcpy(buffer + offset, &msg->fixed_header, sizeof(msg->fixed_header));
-    offset += sizeof(msg->fixed_header);
-
-    // Copiar el variable header
-    memcpy(buffer + offset, &msg->variable_header, sizeof(msg->variable_header));
-    offset += sizeof(msg->variable_header);
-
-    // Copiar el payload
-    memcpy(buffer + offset, &msg->payload, sizeof(msg->payload));
-    offset += sizeof(msg->payload);
-
-    return offset;
-}
-
-
-int main() {
-    int sock = 0, valread;
-    struct sockaddr_in serv_addr;
-    char buffer[1024] = {0};
-
-    message msg;
-    initialize_message(&msg);
-    set_fixed_header_connect(&msg);
-    set_variable_header_connect(&msg);
-    set_payload_connect(&msg);
-
-    int total_length = calculate_total_length(&msg);
-
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Socket creation error");
-        return -1;
+    // Create the client socket
+    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_socket == -1)
+    {
+        perror("Failed to create socket");
+        exit(EXIT_FAILURE);
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(SERVER_PORT);
+    // Configure the server address
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    server_addr.sin_port = htons(SERVER_PORT);
 
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        perror("Invalid address/ Address not supported");
-        return -1;
+    // Connect to the server
+    if (connect(client_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
+    {
+        perror("Failed to connect to server");
+        exit(EXIT_FAILURE);
     }
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        perror("Connection failed");
-        return -1;
+    printf("Connected to the server from: %s:%d\n", SERVER_IP, SERVER_PORT);
+    printf("Enter \"%s\" to exit\n", QUIT_COMMAND);
+    printf("Input commands:\n");
+
+    while (1)
+    {
+        printf("> ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+        buffer[strcspn(buffer, "\n")] = '\0'; // Remove the newline character
+
+        if (strcmp(buffer, QUIT_COMMAND) == 0)
+        {
+            break;
+        }
+        else if (strcmp(buffer, CONNECT_COMMAND) == 0)
+        {
+            // Enviar el comando CONNECT como un string
+            send(client_socket, buffer, strlen(buffer), 0);
+
+            // Luego, enviar la estructura del mensaje CONNECT
+            message connect_msg;
+            connect_msg.type = CONNECT;
+            initialize_message(&connect_msg);
+            connect_msg.set_fixed_header(&connect_msg);
+            connect_msg.set_variable_header(&connect_msg);
+            connect_msg.set_payload(&connect_msg);
+            encode(&connect_msg);
+
+            printf("Tipo : %d\n", connect_msg.type);
+
+            // Serializar el mensaje CONNECT
+            char serialized_msg[sizeof(message)];
+            memcpy(serialized_msg, &connect_msg, sizeof(message));
+
+            // Enviar la longitud de los datos al servidor
+            size_t data_length = sizeof(serialized_msg);
+            send(client_socket, &data_length, sizeof(data_length), 0);
+
+            // Enviar los datos serializados al servidor
+            send(client_socket, serialized_msg, data_length, 0);
+
+            // Esperar la respuesta del servidor
+            ssize_t bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+            if (bytes_received == -1)
+            {
+                perror("Failed to receive data");
+                break;
+            }
+
+            buffer[bytes_received] = '\0';
+            printf("%s\n", buffer);
+        }
+        else
+        {
+            send(client_socket, buffer, strlen(buffer), 0);
+
+            memset(buffer, 0, BUFFER_SIZE);
+            ssize_t bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+            if (bytes_received == -1)
+            {
+                perror("Failed to receive data");
+                break;
+            }
+
+            buffer[bytes_received] = '\0';
+            printf("%s\n", buffer);
+        }
     }
 
-    int bytes_sent_size = send(sock, &total_length, sizeof(int), 0);
-    if (bytes_sent_size < 0) {
-        perror("Error al enviar el tamaño del mensaje al servidor");
-        return -1;
-    }
-    printf("Bytes sent for message size: %d\n", bytes_sent_size);
+    printf("Closing connection...BYE BYE...\n");
+    close(client_socket);
 
-    char serialized_buffer[total_length];
-
-    size_t serialized_size = serialize_message(&msg, serialized_buffer, total_length);
-
-    // Verificar si la serialización fue exitosa y obtener el tamaño total serializado
-    if (serialized_size > 0) {
-        printf("La estructura message ha sido serializada con éxito. Tamaño total serializado: %zu bytes.\n", serialized_size);
-        // Ahora puedes enviar el búfer serializado a través de la red, escribirlo en un archivo, etc.
-    } else {
-        printf("Error al serializar la estructura message.\n");
-    }
-
-    int bytes_sent_message = send(sock, serialized_buffer, total_length, 0);
-    if (bytes_sent_message < 0) {
-        perror("Error al enviar el mensaje al servidor");
-        return -1;
-    }
-    printf("Bytes sent for message: %d\n", bytes_sent_message);
-
-    printf("Message sent:\n");
-    print_message_fields(&msg);
-
-    valread = read(sock, buffer, 1024);
-    if (valread < 0) {
-        perror("Error al leer la respuesta del servidor");
-        return -1;
-    }
-    printf("Message received from server: %s\n", buffer);
-    destroy_message(&msg);
     return 0;
 }

@@ -6,6 +6,7 @@
     "string.h": "c",
     "connect.h": "c",
     "system_error": "c",
-    "client_constants.h": "c"
+    "server_constants.h": "c",
+    "string_view": "c"
   }
 }

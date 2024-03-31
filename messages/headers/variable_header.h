@@ -41,7 +41,7 @@ union variable_header
     {
         int8_t subscribe_message_id_MSB;
         int8_t subscribe_message_id_LSB;
-    };
+    } subscribe_variable_h;
 
     struct unsubscribe_variable_h
     {
