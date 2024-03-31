@@ -28,27 +28,31 @@ void print_message_fields(const message *msg) {
     }
 
     printf("Type: %d\n", msg->type);
-    
-    if (msg->fixed_header != NULL) {
-        printf("Fixed Header:\n");
-        printf("  Retain: %d\n", get_retain(*msg->fixed_header));
-        printf("  QoS: %d\n", get_qos(*msg->fixed_header));
-        printf("  Dup: %d\n", get_dup(*msg->fixed_header));
-        printf("  Type: %d\n", get_type(*msg->fixed_header));
-    } else {
-        printf("Fixed Header is NULL\n");
-    }
     printf("Payload Length: %zu\n", msg->payload_length);
 }
 
 
-void deserialize_message(const char *buffer, size_t buffer_size, message *msg) {
-    if (buffer_size < sizeof(message)) {
-        perror("Tamaño de búfer insuficiente para deserializar el mensaje");
-        exit(EXIT_FAILURE);
-    }
-    memcpy(msg, buffer, buffer_size);
+void deserialize_message(const char *buffer, size_t buffer_size, message *msg)
+{
+    size_t offset = 0;
+
+    // Leer el tipo de mensaje
+    memcpy(&msg->type, buffer + offset, sizeof(int8_t));
+    offset += sizeof(int8_t);
+
+    // Leer el fixed header
+    memcpy(&msg->fixed_header, buffer + offset, sizeof(msg->fixed_header));
+    offset += sizeof(msg->fixed_header);
+
+    // Leer el variable header
+    memcpy(&msg->variable_header, buffer + offset, sizeof(msg->variable_header));
+    offset += sizeof(msg->variable_header);
+
+    // Leer el payload
+    memcpy(&msg->payload, buffer + offset, sizeof(msg->payload));
+    offset += sizeof(msg->payload);
 }
+
 int main() {
     int server_fd, new_socket;
     struct sockaddr_in address;

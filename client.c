@@ -21,13 +21,29 @@ void print_message_fields(const message *msg) {
     printf("Payload Length: %zu\n", msg->payload_length);
 }
 
-void serialize_message(const message *msg, char *buffer, size_t buffer_size) {
-    if (buffer_size < calculate_total_length(msg)) {
-        perror("El búfer no es lo suficientemente grande para almacenar el mensaje");
-        exit(EXIT_FAILURE);
-    }
-    memcpy(buffer, msg, calculate_total_length(msg));
+size_t serialize_message(const message *msg, char *buffer, size_t buffer_size)
+{
+    size_t offset = 0;
+
+    // Copiar el tipo de mensaje
+    memcpy(buffer + offset, &msg->type, sizeof(int8_t));
+    offset += sizeof(int8_t);
+
+    // Copiar el fixed header
+    memcpy(buffer + offset, &msg->fixed_header, sizeof(msg->fixed_header));
+    offset += sizeof(msg->fixed_header);
+
+    // Copiar el variable header
+    memcpy(buffer + offset, &msg->variable_header, sizeof(msg->variable_header));
+    offset += sizeof(msg->variable_header);
+
+    // Copiar el payload
+    memcpy(buffer + offset, &msg->payload, sizeof(msg->payload));
+    offset += sizeof(msg->payload);
+
+    return offset;
 }
+
 
 int main() {
     int sock = 0, valread;
@@ -69,7 +85,15 @@ int main() {
 
     char serialized_buffer[total_length];
 
-    serialize_message(&msg, serialized_buffer, sizeof(serialized_buffer));
+    size_t serialized_size = serialize_message(&msg, serialized_buffer, total_length);
+
+    // Verificar si la serialización fue exitosa y obtener el tamaño total serializado
+    if (serialized_size > 0) {
+        printf("La estructura message ha sido serializada con éxito. Tamaño total serializado: %zu bytes.\n", serialized_size);
+        // Ahora puedes enviar el búfer serializado a través de la red, escribirlo en un archivo, etc.
+    } else {
+        printf("Error al serializar la estructura message.\n");
+    }
 
     int bytes_sent_message = send(sock, serialized_buffer, total_length, 0);
     if (bytes_sent_message < 0) {
