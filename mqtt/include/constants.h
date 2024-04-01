@@ -21,4 +21,6 @@
 
 #define PROTOCOL_VERSION 0x03
 
+#define MAX_CLIENT_ID_LENGTH 23
+
 #endif

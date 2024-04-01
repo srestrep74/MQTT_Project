@@ -32,8 +32,29 @@ void send_packet(int client_socket, Packet packet)
     write(client_socket, buffer, total_size);
 }
 
+char* generate_client_id1() {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char* client_id = (char*)malloc(MAX_CLIENT_ID_LENGTH + 1);
+    if (client_id == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para el identificador del cliente.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    srand(time(NULL));
+
+    int length = rand() % MAX_CLIENT_ID_LENGTH + 1;
+    for (int i = 0; i < length; i++) {
+        client_id[i] = charset[rand() % (sizeof(charset) - 1)];
+    }
+    client_id[length] = '\0';
+
+    return client_id;
+}
+
 int main()
 {
+    char* id = generate_client_id1();
+    printf("%s\n", id);
     int client_socket;
     struct sockaddr_in server_addr;
 
@@ -59,14 +80,14 @@ int main()
         printf("Connected to the server...");
     }
 
-    Packet packet = create_publish_message("topic1", "data111");
+    Packet packet = create_connect_message();
 
     printf("\n%d\n", packet.fixed_header);
     printf("%d\n", packet.remaining_length);
     printf("%s\n", packet.payload);
 
     send_packet(client_socket, packet);
-
+    printf("HOAL");
     close(client_socket);
 
     return 0;

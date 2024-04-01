@@ -15,26 +15,66 @@
 Packet decode_message(int client_socket)
 {
     Packet packet;
-    unsigned char buffer[100];
-    ssize_t data = read(client_socket, buffer, sizeof(buffer));
+    unsigned char fixed_header;
+    unsigned char remaining_length_bytes[4];
+    ssize_t data;
+
+    // Leer la cabecera fija del mensaje
+    data = read(client_socket, &fixed_header, sizeof(fixed_header));
+    if (data <= 0) {
+        // Error de lectura
+        perror("Error al leer la cabecera fija del mensaje");
+        exit(EXIT_FAILURE);
+    }
+
+    // Leer el campo de longitud restante del mensaje (variable)
     size_t offset = 0;
+    while (offset < sizeof(remaining_length_bytes)) {
+        ssize_t bytes_read = read(client_socket, remaining_length_bytes + offset, sizeof(remaining_length_bytes) - offset);
+        if (bytes_read <= 0) {
+            // Error de lectura
+            perror("Error al leer el campo de longitud restante del mensaje");
+            exit(EXIT_FAILURE);
+        }
+        offset += bytes_read;
+    }
 
-    memcpy(&(packet.fixed_header), buffer + offset, sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
+    // Decodificar la longitud restante del mensaje
+    size_t remaining_length = 0;
+    int multiplier = 1;
+    int byte;
+    offset = 0;
+    do {
+        byte = remaining_length_bytes[offset];
+        remaining_length += (byte & 127) * multiplier;
+        multiplier *= 128;
+        offset++;
+    } while ((byte & 128) != 0 && offset < sizeof(remaining_length_bytes));
 
-    memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
+    // Asignar memoria para el header variable y el payload del mensaje
+    packet.variable_header = malloc(remaining_length);
+    packet.payload = malloc(remaining_length);
 
-    packet.variable_header = malloc(packet.variable_header);
-    memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
-    offset += packet.remaining_length;
+    // Leer el header variable y el payload del mensaje
+    offset = 0;
+    while (offset < remaining_length) {
+        ssize_t bytes_read = read(client_socket, packet.variable_header + offset, remaining_length - offset);
+        if (bytes_read <= 0) {
+            // Error de lectura
+            perror("Error al leer el header variable y el payload del mensaje");
+            exit(EXIT_FAILURE);
+        }
+        offset += bytes_read;
+    }
 
-    size_t payload_size = data - offset;
-    packet.payload = malloc(payload_size);
-    memcpy(packet.payload, buffer + offset, payload_size);
+    // Asegurarse de que el header variable y el payload estén terminados con un carácter nulo
+    packet.variable_header[remaining_length] = '\0';
+    packet.payload[remaining_length] = '\0';
+
 
     return packet;
 }
+
 void *handler(void *arg)
 {
     int client_socket = *((int *)arg);
@@ -43,6 +83,8 @@ void *handler(void *arg)
     printf("RL : %d\n", packet.remaining_length);
     printf("VH : %d\n", packet.variable_header[1]);
     printf("Payload : %s\n", packet.payload);
+    free(packet.variable_header);
+    free(packet.payload);
     close(client_socket);
     return NULL;
 }

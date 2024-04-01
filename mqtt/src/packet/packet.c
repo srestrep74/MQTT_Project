@@ -1,4 +1,6 @@
 #include "../../include/packet/packet.h"
+#include <time.h>
+#include <stdio.h>
 
 void set_type(u_int8_t *fixed_header, u_int8_t type)
 {
@@ -15,10 +17,30 @@ void set_clean_session_flag(uint8_t *connect_flags)
     *connect_flags |= 1 << 1;
 }
 
-Packet create_connect_message(const char *id)
+char* generate_client_id() {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char* client_id = (char*)malloc(MAX_CLIENT_ID_LENGTH + 1);
+    if (client_id == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para el identificador del cliente.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    srand(time(NULL));
+
+    int length = rand() % MAX_CLIENT_ID_LENGTH + 1;
+    for (int i = 0; i < length; i++) {
+        client_id[i] = charset[rand() % (sizeof(charset) - 1)];
+    }
+    client_id[length] = '\0';
+
+    return client_id;
+}
+
+Packet create_connect_message()
 {
     Packet connect;
     set_type(&(connect.fixed_header), CONNECT);
+    char *id = generate_client_id();
     size_t packet_length = 12 + strlen(id);
     set_remaining_length(&(connect.remaining_length), packet_length);
 
@@ -35,10 +57,9 @@ Packet create_connect_message(const char *id)
     set_clean_session_flag(&(connect.variable_header[9]));
     connect.variable_header[10] = 0x00;
     connect.variable_header[11] = 0x3C;
-
     connect.payload = malloc(strlen(id));
     memcpy(connect.payload, id, strlen(id));
-
+    free(id);
     return connect;
 }
 
