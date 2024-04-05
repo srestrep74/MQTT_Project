@@ -1,10 +1,11 @@
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
+#include <signal.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #include "../../include/packet/packet.h"
@@ -12,11 +13,48 @@
 
 #define MAX_CLIENTS 100
 
+unsigned char *encode_message(Packet packet, size_t total_size)
+{
+    unsigned char *buffer = malloc(total_size);
+    size_t offset = 0;
+
+    memcpy(buffer + offset, &(packet.fixed_header), sizeof(packet.fixed_header));
+    offset += sizeof(packet.fixed_header);
+
+    memcpy(buffer + offset, &(packet.remaining_length), sizeof(packet.remaining_length));
+    offset += sizeof(packet.remaining_length);
+
+    if (packet.variable_header)
+    {
+        memcpy(buffer + offset, packet.variable_header, packet.remaining_length);
+        offset += packet.remaining_length;
+    }
+
+    if (packet.payload)
+    {
+        memcpy(buffer + offset, packet.payload, sizeof(packet.payload));
+        offset += sizeof(packet.payload);
+    }
+    return buffer;
+}
+
+void send_packet(int client_socket, Packet packet)
+{
+    size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
+    unsigned char *buffer = encode_message(packet, total_size);
+    write(client_socket, buffer, total_size);
+}
+
 Packet decode_message(int client_socket)
 {
-    Packet packet;
-    unsigned char buffer[100];
+    Packet packet = {0};
+    unsigned char buffer[1000];
+
     ssize_t data = read(client_socket, buffer, sizeof(buffer));
+
+    if (data == -1)
+        return packet;
+
     size_t offset = 0;
 
     memcpy(&(packet.fixed_header), buffer + offset, sizeof(packet.fixed_header));
@@ -30,19 +68,30 @@ Packet decode_message(int client_socket)
     offset += packet.remaining_length;
 
     size_t payload_size = data - offset;
-    packet.payload = malloc(payload_size);
-    memcpy(packet.payload, buffer + offset, payload_size);
+    packet.payload = malloc(sizeof(packet.payload));
+    memcpy(packet.payload, buffer + offset, sizeof(packet.payload));
 
     return packet;
 }
+
 void *handler(void *arg)
 {
     int client_socket = *((int *)arg);
     Packet packet = decode_message(client_socket);
-    printf(" Fixed Header : %d\n", packet.fixed_header);
-    printf("RL : %d\n", packet.remaining_length);
-    printf("VH : %d\n", packet.variable_header[1]);
-    printf("Payload : %s\n", packet.payload);
+
+    if (packet.fixed_header == 0 && get_type(&(packet.fixed_header)) != CONNECT)
+    {
+        printf("Timeout\n");
+        close(client_socket);
+        return NULL;
+    }
+
+    // Manda connack
+    Packet connack = create_connack_message();
+    send_packet(client_socket, connack);
+
+    // Espera paquete pub o sub
+
     close(client_socket);
     return NULL;
 }

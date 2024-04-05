@@ -14,14 +14,24 @@ unsigned char *encode_message(Packet packet, size_t total_size)
 {
     unsigned char *buffer = malloc(total_size);
     size_t offset = 0;
+
     memcpy(buffer + offset, &(packet.fixed_header), sizeof(packet.fixed_header));
     offset += sizeof(packet.fixed_header);
+
     memcpy(buffer + offset, &(packet.remaining_length), sizeof(packet.remaining_length));
     offset += sizeof(packet.remaining_length);
-    memcpy(buffer + offset, packet.variable_header, packet.remaining_length);
-    offset += packet.remaining_length;
-    memcpy(buffer + offset, packet.payload, sizeof(packet.payload));
-    offset += sizeof(packet.payload);
+
+    if (packet.variable_header)
+    {
+        memcpy(buffer + offset, packet.variable_header, packet.remaining_length);
+        offset += packet.remaining_length;
+    }
+
+    if (packet.payload)
+    {
+        memcpy(buffer + offset, packet.payload, sizeof(packet.payload));
+        offset += sizeof(packet.payload);
+    }
     return buffer;
 }
 
@@ -32,12 +42,46 @@ void send_packet(int client_socket, Packet packet)
     write(client_socket, buffer, total_size);
 }
 
+int create_socket()
+{
+    return socket(AF_INET, SOCK_STREAM, 0);
+}
+
+Packet decode_message(int client_socket)
+{
+    Packet packet = {0};
+    unsigned char buffer[1000];
+
+    ssize_t data = read(client_socket, buffer, sizeof(buffer));
+
+    if (data == -1)
+        return packet;
+
+    size_t offset = 0;
+
+    memcpy(&(packet.fixed_header), buffer + offset, sizeof(packet.fixed_header));
+    offset += sizeof(packet.fixed_header);
+
+    memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
+    offset += sizeof(packet.remaining_length);
+
+    packet.variable_header = malloc(packet.variable_header);
+    memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
+    offset += packet.remaining_length;
+
+    size_t payload_size = data - offset;
+    packet.payload = malloc(sizeof(packet.payload));
+    memcpy(packet.payload, buffer + offset, sizeof(packet.payload));
+
+    return packet;
+}
+
 int main()
 {
     int client_socket;
     struct sockaddr_in server_addr;
 
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    client_socket = create_socket();
     if (client_socket == -1)
     {
         perror("Failed to create socket");
@@ -59,13 +103,12 @@ int main()
         printf("Connected to the server...");
     }
 
-    Packet packet = create_publish_message("topic1", "data111");
+    Packet connect = create_connect_message("123");
 
-    printf("\n%d\n", packet.fixed_header);
-    printf("%d\n", packet.remaining_length);
-    printf("%s\n", packet.payload);
+    send_packet(client_socket, connect);
 
-    send_packet(client_socket, packet);
+    Packet packet = decode_message(client_socket);
+    printf("%d\n", packet.fixed_header);
 
     close(client_socket);
 

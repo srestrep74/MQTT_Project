@@ -5,6 +5,11 @@ void set_type(u_int8_t *fixed_header, u_int8_t type)
     *fixed_header = type;
 }
 
+uint8_t get_type(uint8_t *fixed_header)
+{
+    return *fixed_header;
+}
+
 void set_remaining_length(uint8_t *remaining_length, size_t packet_length)
 {
     *remaining_length = packet_length;
@@ -40,6 +45,22 @@ Packet create_connect_message(const char *id)
     memcpy(connect.payload, id, strlen(id));
 
     return connect;
+}
+
+Packet create_connack_message()
+{
+    Packet connack;
+    set_type(&(connack.fixed_header), CONNACK);
+    size_t packet_length = 2;
+    set_remaining_length(&(connack.remaining_length), packet_length);
+
+    connack.variable_header = malloc(packet_length);
+    connack.variable_header[0] = 0x00;
+    connack.variable_header[1] = RETURN_CODE_ACCEPTED;
+
+    connack.payload = NULL;
+
+    return connack;
 }
 
 Packet create_publish_message(const char *topic, const char *data)

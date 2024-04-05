@@ -1,3 +1,6 @@
+#ifndef PACKET_H
+#define PACKET_H
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -20,3 +23,6 @@ Packet create_subscribe_message();
 void set_type(u_int8_t *, u_int8_t);
 void set_remaining_length(uint8_t *, size_t);
 void set_clean_session_flag(uint8_t *);
+uint8_t get_type(uint8_t *fixed_header);
+
+#endif
