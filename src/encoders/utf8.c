@@ -4,7 +4,7 @@ uint8_t *utf8_encode(const char *input)
 {
     size_t len = strlen(input);
     size_t total_length = len + 2;
-    uint8_t *output = (uint8_t *)malloc(total_length + 1); // Add 1 for null terminator
+    uint8_t *output = (uint8_t *)malloc(total_length + 1); 
 
     if (output == NULL)
     {
@@ -15,7 +15,7 @@ uint8_t *utf8_encode(const char *input)
     output[0] = (len >> 8) & 0xFF;
     output[1] = len & 0xFF;
     memcpy(output + 2, input, len);
-    output[total_length] = '\0'; // Add null terminator
+    output[total_length] = '\0'; 
 
     return output;
 }
