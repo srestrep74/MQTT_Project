@@ -8,7 +8,7 @@
 #include "../../include/packet/packet.h"
 #include "../../include/server_constants.h"
 #include "../../include/actions/publish.h"
-#include "../../include/responses/connect.h"
+#include "../../include/server/handlers.h"
 
 #define MAX_CLIENTS 100
 
@@ -89,28 +89,20 @@ Packet decode_message(int client_socket)
 }
 
 void *handler(void *arg) {
+
     int client_socket = *((int *)arg);
 
     Packet packet = decode_message(client_socket);
-    if (packet.fixed_header == 0) {
-        fprintf(stderr, "Error al decodificar el mensaje del cliente\n");
-        close(client_socket);
+    printf("hsiasisa");
+    if(client_handler(client_socket, packet))
+    {
+        printf("BUENAS TARDES");
+    }
+    else
+    {
+        printf("ADIOS");
         return NULL;
     }
-
-    if (get_type(&(packet.fixed_header)) != CONNECT) {
-        printf("Mensaje recibido no es del tipo CONNECT\n");
-
-        Packet connack_error = create_connack_message(CONNACK_REFUSED_NOT_AUTHORIZED);
-        send_packet(client_socket, connack_error);
-
-        close(client_socket);
-        return NULL;
-    }
-
-    Packet connack_success = create_connack_message(CONNACK_CONNECTION_ACCEPTED);
-    send_packet(client_socket, connack_success);
-
     close(client_socket);
     return NULL;
 }

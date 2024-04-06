@@ -9,7 +9,6 @@
 
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
-#include "../../include/responses/connect.h"
 
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
