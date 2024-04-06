@@ -18,7 +18,6 @@ typedef struct
 } Packet;
 
 Packet create_connect_message();
-Packet create_connack_message();
 Packet create_publish_message(const char *, const char *);
 Packet create_subscribe_message();
 

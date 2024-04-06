@@ -8,6 +8,7 @@
 #include "../../include/packet/packet.h"
 #include "../../include/server_constants.h"
 #include "../../include/actions/publish.h"
+#include "../../include/responses/connect.h"
 
 #define MAX_CLIENTS 100
 
@@ -87,43 +88,28 @@ Packet decode_message(int client_socket)
     return packet;
 }
 
-void *handler(void *arg)
-{
+void *handler(void *arg) {
     int client_socket = *((int *)arg);
-    Packet packet = decode_message(client_socket);
 
-    /*if (packet.fixed_header == 0 && get_type(&(packet.fixed_header)) != CONNECT)
-    {
-        printf("Timeout\n");
+    Packet packet = decode_message(client_socket);
+    if (packet.fixed_header == 0) {
+        fprintf(stderr, "Error al decodificar el mensaje del cliente\n");
         close(client_socket);
         return NULL;
     }
 
-    // Manda connack
-    Packet connack = create_connack_message();
-    send_packet(client_socket, connack);
-*/
-    // Espera paquete pub o sub
+    if (get_type(&(packet.fixed_header)) != CONNECT) {
+        printf("Mensaje recibido no es del tipo CONNECT\n");
 
-    /*char *topic = get_topic(&packet);
-    char *message = packet.payload;
+        Packet connack_error = create_connack_message(CONNACK_REFUSED_NOT_AUTHORIZED);
+        send_packet(client_socket, connack_error);
 
-    printf("%s\n", topic);
-    printf("%s\n", message);
+        close(client_socket);
+        return NULL;
+    }
 
-    Tree *tree = get_tree();
-    pthread_mutex_lock(&tree->mutex);
-    TopicNode *topicnode = getChildNode(tree->root, topic);
-    printf("%s\n", topicnode->name);
-    publishMessage(topicnode, message);
-
-    printTree(tree->root, 0);
-
-    pthread_mutex_unlock(&tree->mutex); */
-
-    const char *id = utf8_decode(packet.payload);
-
-    printf("%s\n", id);
+    Packet connack_success = create_connack_message(CONNACK_CONNECTION_ACCEPTED);
+    send_packet(client_socket, connack_success);
 
     close(client_socket);
     return NULL;

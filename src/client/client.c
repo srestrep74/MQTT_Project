@@ -9,6 +9,7 @@
 
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
+#include "../../include/responses/connect.h"
 
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
@@ -100,12 +101,27 @@ int main()
     }
     else
     {
-        printf("Connected to the server...");
+        printf("Connected to the server...\n");
+        
+        Packet connect = create_connect_message();
+        send_packet(client_socket, connect);
+
+        Packet connack = decode_message(client_socket);
+        if (get_type(&(connack.fixed_header)) != CONNACK) {
+            printf("Error: Respuesta no válida del servidor\n");
+            close(client_socket);
+            exit(EXIT_FAILURE);
+        }
+
+        uint8_t return_code = connack.variable_header[1];
+        if (return_code == CONNACK_CONNECTION_ACCEPTED) {
+            printf("El servidor ha aceptado la conexión\n");
+        } else {
+            printf("El servidor ha denegado la conexión (Código de retorno: %d)\n", return_code);
+        }
     }
 
-    Packet connect = create_connect_message();
-
-    send_packet(client_socket, connect);
+    
 
     close(client_socket);
 
