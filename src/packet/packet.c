@@ -57,6 +57,7 @@ Packet create_connect_message()
 
     connect.payload = malloc(id_length + 1);
     memcpy(connect.payload, id, id_length + 1);
+    free(id);
 
     return connect;
 }
