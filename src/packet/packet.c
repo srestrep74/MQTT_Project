@@ -20,11 +20,25 @@ void set_clean_session_flag(uint8_t *connect_flags)
     *connect_flags |= 1 << 1;
 }
 
-Packet create_connect_message(const char *id)
+char *get_topic(Packet *publish)
+{
+    size_t topic_length = publish->variable_header[1];
+    char *topic = malloc(topic_length + 1);
+    memcpy(topic, publish->variable_header + 2, topic_length);
+    topic[topic_length] = '\0';
+    return topic;
+}
+
+Packet create_connect_message()
 {
     Packet connect;
+
+    char *client_id = generate_client_id();
+    uint8_t *id = utf8_encode(client_id);
+    size_t id_length = strlen(client_id);
+
     set_type(&(connect.fixed_header), CONNECT);
-    size_t packet_length = 12 + strlen(id);
+    size_t packet_length = 12 + id_length;
     set_remaining_length(&(connect.remaining_length), packet_length);
 
     connect.variable_header = malloc(packet_length);
@@ -41,8 +55,8 @@ Packet create_connect_message(const char *id)
     connect.variable_header[10] = 0x00;
     connect.variable_header[11] = 0x3C;
 
-    connect.payload = malloc(strlen(id));
-    memcpy(connect.payload, id, strlen(id));
+    connect.payload = malloc(id_length + 1);
+    memcpy(connect.payload, id, id_length + 1);
 
     return connect;
 }

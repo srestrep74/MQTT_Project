@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <time.h>
 
 #include "include/server/topic_tree/topic_tree.h"
 #include "include/actions/subscribe.h"
+#include "include/packet/packet.h"
 
 int main()
 {
@@ -47,6 +50,13 @@ int main()
 
     // Liberar memoria utilizada por el árbol de tópicos
     freeTopicTree(root);
+
+    /*char *client_id = generate_client_id();
+    printf("ID  Antes: %s\n", client_id);
+    Packet connect = create_connect(client_id);
+
+    char *id = utf8_decode(connect.payload);
+    printf("ID  Despues: %s\n", id);*/
 
     return 0;
 }

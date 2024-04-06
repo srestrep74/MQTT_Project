@@ -29,7 +29,7 @@ unsigned char *encode_message(Packet packet, size_t total_size)
 
     if (packet.payload)
     {
-        memcpy(buffer + offset, packet.payload, sizeof(packet.payload));
+        memcpy(buffer + offset, packet.payload, packet.remaining_length);
         offset += sizeof(packet.payload);
     }
     return buffer;
@@ -37,7 +37,7 @@ unsigned char *encode_message(Packet packet, size_t total_size)
 
 void send_packet(int client_socket, Packet packet)
 {
-    size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
+    size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length + (packet.remaining_length - sizeof(packet.variable_header));
     unsigned char *buffer = encode_message(packet, total_size);
     write(client_socket, buffer, total_size);
 }
@@ -103,12 +103,9 @@ int main()
         printf("Connected to the server...");
     }
 
-    Packet connect = create_connect_message("123");
+    Packet connect = create_connect_message();
 
     send_packet(client_socket, connect);
-
-    Packet packet = decode_message(client_socket);
-    printf("%d\n", packet.fixed_header);
 
     close(client_socket);
 

@@ -2,16 +2,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <signal.h>
-#include <unistd.h>
-#include <pthread.h>
+#include <stdbool.h>
 
+#include "../../include/server/server.h"
 #include "../../include/packet/packet.h"
 #include "../../include/server_constants.h"
+#include "../../include/actions/publish.h"
 
 #define MAX_CLIENTS 100
+
+Tree *get_tree()
+{
+    static Tree tree;
+    static bool init = false;
+    if (!init)
+    {
+        tree.root = createTopicNode("/");
+        pthread_mutex_init(&tree.mutex, NULL);
+        init = true;
+    }
+
+    return &tree;
+}
 
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
@@ -63,13 +75,14 @@ Packet decode_message(int client_socket)
     memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
     offset += sizeof(packet.remaining_length);
 
-    packet.variable_header = malloc(packet.variable_header);
+    packet.variable_header = malloc(packet.remaining_length);
     memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
     offset += packet.remaining_length;
 
     size_t payload_size = data - offset;
-    packet.payload = malloc(sizeof(packet.payload));
-    memcpy(packet.payload, buffer + offset, sizeof(packet.payload));
+    packet.payload = malloc(payload_size + 1);
+    memcpy(packet.payload, buffer + offset, payload_size);
+    packet.payload[payload_size] = '\0';
 
     return packet;
 }
@@ -79,7 +92,7 @@ void *handler(void *arg)
     int client_socket = *((int *)arg);
     Packet packet = decode_message(client_socket);
 
-    if (packet.fixed_header == 0 && get_type(&(packet.fixed_header)) != CONNECT)
+    /*if (packet.fixed_header == 0 && get_type(&(packet.fixed_header)) != CONNECT)
     {
         printf("Timeout\n");
         close(client_socket);
@@ -89,8 +102,28 @@ void *handler(void *arg)
     // Manda connack
     Packet connack = create_connack_message();
     send_packet(client_socket, connack);
-
+*/
     // Espera paquete pub o sub
+
+    /*char *topic = get_topic(&packet);
+    char *message = packet.payload;
+
+    printf("%s\n", topic);
+    printf("%s\n", message);
+
+    Tree *tree = get_tree();
+    pthread_mutex_lock(&tree->mutex);
+    TopicNode *topicnode = getChildNode(tree->root, topic);
+    printf("%s\n", topicnode->name);
+    publishMessage(topicnode, message);
+
+    printTree(tree->root, 0);
+
+    pthread_mutex_unlock(&tree->mutex); */
+
+    const char *id = utf8_decode(packet.payload);
+
+    printf("%s\n", id);
 
     close(client_socket);
     return NULL;
