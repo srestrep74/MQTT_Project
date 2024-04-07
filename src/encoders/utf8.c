@@ -32,7 +32,7 @@ char *utf8_decode(const uint8_t *input)
         return NULL;
     }
 
-    memcpy(output, input + 2, len);
+    memcpy(output, input + 2, len + 1);
     output[len] = '\0';
     return output;
 }

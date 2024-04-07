@@ -10,6 +10,30 @@
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
 
+void print_buffer(unsigned char *buffer, size_t size)
+{
+    printf("Buffer content (hexadecimal):\n");
+    for (size_t i = 0; i < size; i++)
+    {
+        printf("%02X ", buffer[i]);
+    }
+    printf("\n");
+
+    printf("Buffer content (ASCII):\n");
+    for (size_t i = 0; i < size; i++)
+    {
+        if (buffer[i] >= 32 && buffer[i] <= 126)
+        {
+            printf("%c ", buffer[i]);
+        }
+        else
+        {
+            printf(". ");
+        }
+    }
+    printf("\n");
+}
+
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
     unsigned char *buffer = malloc(total_size);
@@ -100,12 +124,57 @@ int main()
     }
     else
     {
-        printf("Connected to the server...");
+        printf("Connected to the server...\n");
+
+        Packet connect = create_connect_message();
+        send_packet(client_socket, connect);
+
+        Packet connack = decode_message(client_socket);
+        if (get_type(&(connack.fixed_header)) != CONNACK)
+        {
+            printf("Error: No valid answer from server\n");
+            close(client_socket);
+            exit(EXIT_FAILURE);
+        }
+
+        uint8_t return_code = connack.variable_header[1];
+        if (return_code == CONNACK_CONNECTION_ACCEPTED)
+        {
+            printf("The server has accepted the connection.\n");
+            int choice;
+
+            do
+            {
+                printf("Select an option:\n");
+                printf("1. Subscriber\n");
+                printf("2. Publisher\n");
+                printf("3. Disconnect\n");
+                printf("Enter the number corresponding to your choice: ");
+
+                scanf("%d", &choice);
+
+                switch (choice)
+                {
+                case 1:
+                    printf("You have selected Subscriber.\n");
+                    break;
+                case 2:
+                    printf("You have selected Publisher.\n");
+                    break;
+                case 3:
+                    printf("You have selected Disconnect.\n");
+                    break;
+                default:
+                    printf("Invalid option. Please select 1 or 2.\n");
+                    break;
+                }
+            } while (choice != 1 && choice != 2);
+        }
+        else
+        {
+            printf("The server has denied the connection (Return code: %d).\n", return_code);
+        }
     }
-
-    Packet connect = create_connect_message();
-
-    send_packet(client_socket, connect);
 
     close(client_socket);
 

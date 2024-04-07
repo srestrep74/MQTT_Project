@@ -51,6 +51,11 @@ int main()
     // Liberar memoria utilizada por el árbol de tópicos
     freeTopicTree(root);
 
+    Packet pub = create_publish_message("data", "data");
+
+    printf("type : %d\n", get_type(&pub.fixed_header));
+    printf("type : %d\n", get_qos(&pub.fixed_header));
+
     /*char *client_id = generate_client_id();
     printf("ID  Antes: %s\n", client_id);
     Packet connect = create_connect(client_id);

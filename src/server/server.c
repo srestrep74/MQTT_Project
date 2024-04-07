@@ -8,6 +8,7 @@
 #include "../../include/packet/packet.h"
 #include "../../include/server_constants.h"
 #include "../../include/actions/publish.h"
+#include "../../include/server/handlers.h"
 
 #define MAX_CLIENTS 100
 
@@ -57,6 +58,30 @@ void send_packet(int client_socket, Packet packet)
     write(client_socket, buffer, total_size);
 }
 
+void print_buffer(unsigned char *buffer, size_t size)
+{
+    printf("Buffer content (hexadecimal):\n");
+    for (size_t i = 0; i < size; i++)
+    {
+        printf("%02X ", buffer[i]);
+    }
+    printf("\n");
+
+    printf("Buffer content (ASCII):\n");
+    for (size_t i = 0; i < size; i++)
+    {
+        if (buffer[i] >= 32 && buffer[i] <= 126)
+        {
+            printf("%c ", buffer[i]);
+        }
+        else
+        {
+            printf(". ");
+        }
+    }
+    printf("\n");
+}
+
 Packet decode_message(int client_socket)
 {
     Packet packet = {0};
@@ -75,7 +100,7 @@ Packet decode_message(int client_socket)
     memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
     offset += sizeof(packet.remaining_length);
 
-    packet.variable_header = malloc(packet.remaining_length);
+    packet.variable_header = malloc(packet.remaining_length + 2);
     memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
     offset += packet.remaining_length;
 
@@ -92,39 +117,25 @@ void *handler(void *arg)
     int client_socket = *((int *)arg);
     Packet packet = decode_message(client_socket);
 
-    /*if (packet.fixed_header == 0 && get_type(&(packet.fixed_header)) != CONNECT)
+    if (client_handler(client_socket, packet))
     {
-        printf("Timeout\n");
-        close(client_socket);
-        return NULL;
+        printf("Success CONNECT\n");
+    }
+    else
+    {
+        printf("Error in CONNECT\n");
     }
 
-    // Manda connack
-    Packet connack = create_connack_message();
-    send_packet(client_socket, connack);
-*/
-    // Espera paquete pub o sub
+    /*if (get_type(&packet.fixed_header) == PUBLISH)
+    {
+        const char *message = utf8_decode(packet.payload);
+        char *topic = utf8_decode(get_topic(&packet));
 
-    /*char *topic = get_topic(&packet);
-    char *message = packet.payload;
-
-    printf("%s\n", topic);
-    printf("%s\n", message);
-
-    Tree *tree = get_tree();
-    pthread_mutex_lock(&tree->mutex);
-    TopicNode *topicnode = getChildNode(tree->root, topic);
-    printf("%s\n", topicnode->name);
-    publishMessage(topicnode, message);
-
-    printTree(tree->root, 0);
-
-    pthread_mutex_unlock(&tree->mutex); */
-
-    const char *id = utf8_decode(packet.payload);
-
-    printf("%s\n", id);
-
+        Tree *tree = get_tree();
+        pthread_mutex_lock(&tree->mutex);
+        publish_handler(packet, tree->root, topic, message);
+        pthread_mutex_unlock(&tree->mutex);
+    }*/
     close(client_socket);
     return NULL;
 }
