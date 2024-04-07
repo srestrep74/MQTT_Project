@@ -1,13 +1,7 @@
 #include "../../include/packet/packet.h"
 
-void set_type(u_int8_t *fixed_header, u_int8_t type)
-{
-    *fixed_header = type;
-}
-
-uint8_t get_type(uint8_t *fixed_header)
-{
-    return *fixed_header;
+uint8_t get_type(uint8_t *fixed_header) {
+    return (*fixed_header >> 4) & 0b00001111;
 }
 
 void set_remaining_length(uint8_t *remaining_length, size_t packet_length)
@@ -99,4 +93,105 @@ Packet create_publish_message(const char *topic, const char *data)
     memcpy(publish.payload, data, data_length);
 
     return publish;
+}
+
+Packet create_subscribe_message(const TopicQoS *topics, size_t num_topics, size_t *payload_length)
+{
+    Packet subscribe;
+
+    uint16_t id = get_packet_id();
+    set_type(&(subscribe.fixed_header), SUBSCRIBE);
+    set_qos(&(subscribe.fixed_header), 1);
+    
+    
+    size_t id_length = sizeof(id); 
+
+    subscribe.variable_header = malloc(id_length);
+    
+    memcpy(subscribe.variable_header, &id, id_length);
+
+    
+    size_t total_length = 0;
+    for (size_t i = 0; i < num_topics; ++i) {
+        uint8_t *utf8_topic = NULL; 
+        if (topics[i].topic_name != NULL && topics[i].topic_name[0] != '\0') {
+            utf8_topic = utf8_encode(topics[i].topic_name);
+            if (utf8_topic != NULL) {
+                total_length += strlen(utf8_topic);
+                free(utf8_topic);
+            } else {
+                printf("Error al codificar el tema en UTF-8\n");
+            }
+        } else {
+            printf("El tema %zu está vacío o es nulo\n", i);
+        }
+
+        if (utf8_topic != NULL) {
+            total_length += strlen(utf8_topic);
+        }
+    }
+
+    printf("%zu\n", total_length);
+
+    subscribe.payload = (uint8_t *)malloc(total_length);
+    if (subscribe.payload == NULL) {
+        *payload_length = 0;
+        return subscribe;
+    }
+
+    size_t offset = 0;
+    for (size_t i = 0; i < num_topics; ++i) {
+        uint8_t *utf8_topic = utf8_encode(topics[i].topic_name);
+        if (utf8_topic == NULL) {
+            free(subscribe.payload);
+            *payload_length = 0;
+            return subscribe;
+        }
+        size_t topic_length = strlen(utf8_topic);
+        memcpy(&(subscribe.payload[offset]), utf8_topic, topic_length);
+        offset += topic_length;
+        free(utf8_topic); 
+    }
+    printf("Payload:\n");
+    for (size_t i = 0; i < total_length; ++i) {
+        printf("%02X ", subscribe.payload[i]); 
+    }
+    printf("\n");
+
+    set_remaining_length(&(subscribe.remaining_length), total_length);
+
+    *payload_length = total_length;
+
+    return subscribe;
+
+}
+
+void set_qos(uint8_t *fixed_header, int qos)
+{
+    *fixed_header &= ~(0b11 << 1);
+
+    switch (qos)
+    {
+    case 0:
+        break;
+    case 1:
+        *fixed_header |= (1 << 1);
+        break;
+    case 2:
+        *fixed_header |= (2 << 1);
+        break;
+    default:
+        printf("Qos not valid \n");
+        break;
+    }
+}
+
+void set_type(u_int8_t *fixed_header, u_int8_t type)
+{
+    *fixed_header &= ~(0b1111 << 4);
+    *fixed_header |= (type << 4) & (0b1111 << 4);
+}
+
+uint8_t get_qos(uint8_t *fixed_header) {
+    return (*fixed_header >> 1) & 0b11; 
 }

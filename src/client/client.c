@@ -34,7 +34,7 @@ unsigned char *encode_message(Packet packet, size_t total_size)
     }
     return buffer;
 }
-
+    
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length + (packet.remaining_length - sizeof(packet.variable_header));
