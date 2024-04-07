@@ -23,3 +23,25 @@ bool client_handler(int client_socket, Packet client_packet)
     send_packet(client_socket, connack_success);
     return true;
 }
+
+void publish_handler(Packet packet, TopicNode *root, const char *topic, const char *message)
+{
+    TopicNode *node = getChildNode(root, topic);
+    publishMessage(node, message);
+    int numsubs = 0;
+    int **subs = getSubscribers(node, &numsubs);
+    for(int i = 0 ; i < numsubs ; i++){
+        printf("%d\n", subs[i]);
+        write(subs[i], packet.payload, strlen(packet.payload));
+    }
+    printTree(root, 0);
+}
+
+void subscribe_handler(Packet packet, TopicNode *root, const char *topic, int client_socket){
+    printf("%d\n", client_socket);
+    char *topics[] = {topic};
+    int num_topics = sizeof(topics) / sizeof(topics[0]);
+    subscribeToTopics(root, topics, num_topics, client_socket);
+    TopicNode * node = getChildNode(root, topic);
+    printf("%d\n", node->num_subscribers);
+}

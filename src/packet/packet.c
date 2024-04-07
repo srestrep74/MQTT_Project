@@ -79,23 +79,29 @@ Packet create_publish_message(const char *topic, const char *data)
 {
     Packet publish;
     set_type(&(publish.fixed_header), PUBLISH);
-    size_t topic_length = strlen(topic);
-    size_t data_length = strlen(data);
+    set_qos(&publish.fixed_header, 0);
+
+    uint8_t *topic_encoded = utf8_encode(topic);
+    uint8_t *data_encoded = utf8_encode(data);
+
+    size_t topic_length = strlen(topic) + 2;
+    size_t data_length = strlen(data) + 2;
+
     size_t packet_length = 2 + data_length + topic_length;
     set_remaining_length(&(publish.remaining_length), packet_length);
 
     publish.variable_header = malloc(packet_length);
     publish.variable_header[0] = 0x00;
     publish.variable_header[1] = topic_length;
-    memcpy(&publish.variable_header[2], topic, topic_length);
+    memcpy(&publish.variable_header[2], topic_encoded, packet_length);
 
-    publish.payload = malloc(data_length);
-    memcpy(publish.payload, data, data_length);
+    publish.payload = malloc(data_length + 1);
+    memcpy(publish.payload, data_encoded, data_length + 1);
 
     return publish;
 }
 
-Packet create_subscribe_message(const TopicQoS *topics, size_t num_topics, size_t *payload_length)
+Packet create_subscribe_message(const char *topic)
 {
     Packet subscribe;
 
@@ -103,64 +109,22 @@ Packet create_subscribe_message(const TopicQoS *topics, size_t num_topics, size_
     set_type(&(subscribe.fixed_header), SUBSCRIBE);
     set_qos(&(subscribe.fixed_header), 1);
     
-    
     size_t id_length = sizeof(id); 
 
     subscribe.variable_header = malloc(id_length);
     
     memcpy(subscribe.variable_header, &id, id_length);
 
-    
-    size_t total_length = 0;
-    for (size_t i = 0; i < num_topics; ++i) {
-        uint8_t *utf8_topic = NULL; 
-        if (topics[i].topic_name != NULL && topics[i].topic_name[0] != '\0') {
-            utf8_topic = utf8_encode(topics[i].topic_name);
-            if (utf8_topic != NULL) {
-                total_length += strlen(utf8_topic);
-                free(utf8_topic);
-            } else {
-                printf("Error al codificar el tema en UTF-8\n");
-            }
-        } else {
-            printf("El tema %zu está vacío o es nulo\n", i);
-        }
 
-        if (utf8_topic != NULL) {
-            total_length += strlen(utf8_topic);
-        }
-    }
+    uint8_t *topic_encoded = utf8_encode(topic);
 
-    printf("%zu\n", total_length);
+    size_t topic_length = strlen(topic) + 2;
 
-    subscribe.payload = (uint8_t *)malloc(total_length);
-    if (subscribe.payload == NULL) {
-        *payload_length = 0;
-        return subscribe;
-    }
+    size_t packet_length = 2 + topic_length;
+    set_remaining_length(&(subscribe.remaining_length), packet_length);
 
-    size_t offset = 0;
-    for (size_t i = 0; i < num_topics; ++i) {
-        uint8_t *utf8_topic = utf8_encode(topics[i].topic_name);
-        if (utf8_topic == NULL) {
-            free(subscribe.payload);
-            *payload_length = 0;
-            return subscribe;
-        }
-        size_t topic_length = strlen(utf8_topic);
-        memcpy(&(subscribe.payload[offset]), utf8_topic, topic_length);
-        offset += topic_length;
-        free(utf8_topic); 
-    }
-    printf("Payload:\n");
-    for (size_t i = 0; i < total_length; ++i) {
-        printf("%02X ", subscribe.payload[i]); 
-    }
-    printf("\n");
-
-    set_remaining_length(&(subscribe.remaining_length), total_length);
-
-    *payload_length = total_length;
+    subscribe.payload = malloc(topic_length + 1);
+    memcpy(subscribe.payload, topic_encoded, topic_length + 1);
 
     return subscribe;
 

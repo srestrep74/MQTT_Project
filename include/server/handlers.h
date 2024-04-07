@@ -8,5 +8,7 @@
 #include "server.h"
 
 bool client_handler(int, Packet);
+void publish_handler(Packet, TopicNode *, const char *, const char *);
+void subscribe_handler(Packet, TopicNode *, const char *, int);
 
 #endif

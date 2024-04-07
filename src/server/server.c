@@ -88,20 +88,42 @@ Packet decode_message(int client_socket)
     return packet;
 }
 
-void *handler(void *arg) {
 
+void *handler(void *arg)
+{
     int client_socket = *((int *)arg);
-
+    printf("%d\n", client_socket);
     Packet packet = decode_message(client_socket);
-    printf("hsiasisa");
-    if(client_handler(client_socket, packet))
+
+    if (client_handler(client_socket, packet))
     {
-        printf("BUENAS TARDES");
+        while(1){
+            //printf("Entre\n");
+            packet = decode_message(client_socket);
+            if(get_type(&packet.fixed_header) == PUBLISH){
+                const char *message = utf8_decode(packet.payload);
+                char *topic = utf8_decode(get_topic(&packet));
+
+                Tree *tree = get_tree();
+                pthread_mutex_lock(&tree->mutex);
+                publish_handler(packet, tree->root, topic, message);
+                pthread_mutex_unlock(&tree->mutex);
+            }else if(get_type(&packet.fixed_header) == SUBSCRIBE){
+                char *topic = utf8_decode(packet.payload);
+
+                Tree *tree = get_tree();
+                pthread_mutex_lock(&tree->mutex);
+                subscribe_handler(packet, tree->root, topic, client_socket);
+                pthread_mutex_unlock(&tree->mutex);
+            }else if(get_type(&packet.fixed_header) == DISCONNECT){
+                close(client_socket);
+                break;
+            }
+        }
     }
     else
     {
-        printf("ADIOS");
-        return NULL;
+        printf("Error in CONNECT\n");
     }
     close(client_socket);
     return NULL;
@@ -155,6 +177,7 @@ int main()
         printf("New connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         pthread_t thread;
+        printf("%d\n", client_socket);
         pthread_create(&thread, NULL, handler, &client_socket);
     }
 

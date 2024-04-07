@@ -6,6 +6,7 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
@@ -76,6 +77,30 @@ Packet decode_message(int client_socket)
     return packet;
 }
 
+void *receive_messages(void *arg) {
+    int client_socket = *(int *)arg;
+    char message[1024];
+    ssize_t data;
+
+    while (1) {
+        // Leer el mensaje del servidor
+        data = read(client_socket, message, sizeof(message));
+        if (data > 0) {
+            printf("Received message from server: %s\n", message);
+        } else if (data == 0) {
+            // El servidor cerró la conexión
+            printf("Connection closed by server.\n");
+            break;
+        } else {
+            perror("read");
+            break;
+        }
+    }
+
+    // Salir del hilo
+    pthread_exit(NULL);
+}
+
 int main()
 {
     int client_socket;
@@ -101,6 +126,7 @@ int main()
     else
     {
         printf("Connected to the server...\n");
+         printf("Connected to the server...%d\n", client_socket);
         
         Packet connect = create_connect_message();
         send_packet(client_socket, connect);
@@ -117,26 +143,50 @@ int main()
             printf("The server has accepted the connection.\n");
             int choice;
 
-            do {
+            pthread_t thread_id;
+    if (pthread_create(&thread_id, NULL, receive_messages, &client_socket) != 0) {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
+
+            while(1) {
+                
                 printf("Select an option:\n");
                 printf("1. Subscriber\n");
                 printf("2. Publisher\n");
+                printf("3. Disconnect\n");
                 printf("Enter the number corresponding to your choice: ");
 
                 scanf("%d", &choice);
 
+                getchar();
+
                 switch(choice) {
                     case 1:
                         printf("You have selected Subscriber.\n");
+                        char topic_sub[100];
+                        printf("Enter the topic\n");
+                        fgets(topic_sub, sizeof(topic_sub), stdin);
+                        Packet sub = create_subscribe_message(topic_sub);
+                        send_packet(client_socket,sub);
                         break;
                     case 2:
                         printf("You have selected Publisher.\n");
+                        char  topic[100] ,  message[100];
+                        printf("Enter the topic\n");
+                        fgets(topic, sizeof(topic), stdin);
+                        printf("Enter the message\n");
+                        fgets(message, sizeof(message), stdin);
+                        Packet pub = create_publish_message(topic, message);
+                        send_packet(client_socket,pub);
+                        break;
+                    case 3 : 
                         break;
                     default:
                         printf("Invalid option. Please select 1 or 2.\n");
                         break;
                 }
-            } while (choice != 1 && choice != 2);
+            }
 
                 } else {
                     printf("The server has denied the connection (Return code: %d).\n", return_code);

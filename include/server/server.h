@@ -18,5 +18,6 @@ typedef struct
 
 Tree *get_tree();
 Packet decode_message(int);
+void send_packet(int client_socket, Packet packet);
 
 #endif
