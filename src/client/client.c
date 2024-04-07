@@ -114,11 +114,34 @@ int main()
 
         uint8_t return_code = connack.variable_header[1];
         if (return_code == CONNACK_CONNECTION_ACCEPTED) {
-            printf("El servidor ha aceptado la conexión\n");
-        } else {
-            printf("El servidor ha denegado la conexión (Código de retorno: %d)\n", return_code);
-        }
-    }
+            printf("The server has accepted the connection.\n");
+            int choice;
+
+            do {
+                printf("Select an option:\n");
+                printf("1. Subscriber\n");
+                printf("2. Publisher\n");
+                printf("Enter the number corresponding to your choice: ");
+
+                scanf("%d", &choice);
+
+                switch(choice) {
+                    case 1:
+                        printf("You have selected Subscriber.\n");
+                        break;
+                    case 2:
+                        printf("You have selected Publisher.\n");
+                        break;
+                    default:
+                        printf("Invalid option. Please select 1 or 2.\n");
+                        break;
+                }
+            } while (choice != 1 && choice != 2);
+
+                } else {
+                    printf("The server has denied the connection (Return code: %d).\n", return_code);
+                }
+            }
 
     
 
