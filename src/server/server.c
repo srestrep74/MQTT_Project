@@ -26,7 +26,8 @@ Tree *get_tree()
     return &tree;
 }
 
-typedef struct {
+typedef struct
+{
     int client_socket;
     int client_id;
 } ClientInfo;
@@ -93,7 +94,6 @@ Packet decode_message(int client_socket)
     return packet;
 }
 
-
 void *handler(void *arg)
 {
     ClientInfo *client_info = (ClientInfo *)arg;
@@ -105,25 +105,30 @@ void *handler(void *arg)
 
     if (client_handler(client_socket, packet))
     {
-        while(1){
-            //printf("Entre\n");
+        while (1)
+        {
+            // printf("Entre\n");
             packet = decode_message(client_socket);
-            if(get_type(&packet.fixed_header) == PUBLISH){
+            if (get_type(&packet.fixed_header) == PUBLISH)
+            {
                 const char *message = utf8_decode(packet.payload);
                 char *topic = utf8_decode(get_topic(&packet));
-
                 Tree *tree = get_tree();
                 pthread_mutex_lock(&tree->mutex);
                 publish_handler(packet, tree->root, topic, message);
                 pthread_mutex_unlock(&tree->mutex);
-            }else if(get_type(&packet.fixed_header) == SUBSCRIBE){
+            }
+            else if (get_type(&packet.fixed_header) == SUBSCRIBE)
+            {
                 char *topic = utf8_decode(packet.payload);
 
                 Tree *tree = get_tree();
                 pthread_mutex_lock(&tree->mutex);
                 subscribe_handler(packet, tree->root, topic, client_socket);
                 pthread_mutex_unlock(&tree->mutex);
-            }else if(get_type(&packet.fixed_header) == DISCONNECT){
+            }
+            else if (get_type(&packet.fixed_header) == DISCONNECT)
+            {
                 close(client_socket);
                 break;
             }
