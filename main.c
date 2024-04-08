@@ -8,32 +8,50 @@
 #include "include/actions/subscribe.h"
 #include "include/packet/packet.h"
 
+int main()
+{
+    // Ejemplo de uso
+    TopicNode *root = createTopicNode("/");
 
-int main() {
-    
-    char *topics = "topic/a";
-    
+    const char *topic = "sensors";
+    TopicNode *node1 = getChildNode(root, topic);
+    topic = "sensors/temperature/wet";
+    TopicNode *node2 = getChildNode(root, topic);
+    topic = "sensors/humidity";
+    TopicNode *node3 = getChildNode(root, topic);
+    topic = "ejemplo/wet";
+    TopicNode *node4 = getChildNode(root, topic);
+    topic = "sensors";
+    TopicNode *node5 = getChildNode(root, topic);
 
-    size_t payload_length;
-    printf("%zu\n", payload_length);
+    const char *topics[] = {"sensors/+/wet"};
+    const int numTopics = sizeof(topics) / sizeof(topics[0]);
+    int subscriber = 10;
 
-    Packet subscribe_message = create_subscribe_message(topics);
+    subscribeToTopics(root, topics, numTopics, subscriber);
 
-    if (subscribe_message.payload == NULL) {
-        printf("Error: No se pudo crear el mensaje de suscripción.\n");
-        return EXIT_FAILURE;
+    int numSubscribers = 0;
+    TopicNode *test = getChildNode(root, "sensors/temperature/wet");
+    int **subscribers = getSubscribers(test, &numSubscribers);
+    if (subscribers != NULL)
+    {
+        printf("Los suscriptores del tópico : \n");
+        for (int i = 0; i < numSubscribers; i++)
+        {
+            printf("- %d\n", subscribers[i]);
+        }
     }
 
-    printf("Mensaje de suscripción:\n");
-    printf("Tipo: %d\n", get_type(&(subscribe_message.fixed_header)));
-    printf("Packet ID: %d\n", get_packet_id(&(subscribe_message.variable_header)));
-    printf("Remaining Length: %lu\n", subscribe_message.remaining_length);
-    printf("Payload Length: %lu\n", strlen(subscribe_message.payload));
+    printTree(root, 0);
 
-    printf("Payload Content:%s", utf8_decode(subscribe_message.payload));
-    
-    free(subscribe_message.payload);
-    
-    return EXIT_SUCCESS;
+    // Liberar memoria utilizada por el árbol de tópicos
+    freeTopicTree(root);
+    /*char *client_id = generate_client_id();
+    printf("ID  Antes: %s\n", client_id);
+    Packet connect = create_connect(client_id);
 
+    char *id = utf8_decode(connect.payload);
+    printf("ID  Despues: %s\n", id);*/
+
+    return 0;
 }
