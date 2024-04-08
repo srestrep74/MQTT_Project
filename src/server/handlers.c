@@ -30,10 +30,13 @@ void publish_handler(Packet packet, TopicNode *root, const char *topic, const ch
     publishMessage(node, message);
     int numsubs = 0;
     int **subs = getSubscribers(node, &numsubs);
+    printf("hodho");
     for(int i = 0 ; i < numsubs ; i++){
-        printf("%d\n", subs[i]);
-        write(subs[i], packet.payload, strlen(packet.payload));
+
+        printf("BUENOSD AIS%d\n", subs[i]);
+        write(subs[i], message, strlen(message));
     }
+    free(subs);
     printTree(root, 0);
 }
 
@@ -43,5 +46,4 @@ void subscribe_handler(Packet packet, TopicNode *root, const char *topic, int cl
     int num_topics = sizeof(topics) / sizeof(topics[0]);
     subscribeToTopics(root, topics, num_topics, client_socket);
     TopicNode * node = getChildNode(root, topic);
-    printf("%d\n", node->num_subscribers);
 }

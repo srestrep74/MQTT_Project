@@ -141,7 +141,6 @@ void subscribeToChildren(TopicNode *node, const int subscriber)
 // Función para agregar un suscriptor a un nodo del árbol
 void addSubscriber(TopicNode *node, const int subscriber)
 {
-    printf("SUBS");
     if (node == NULL )
         return;
 

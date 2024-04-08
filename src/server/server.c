@@ -26,6 +26,11 @@ Tree *get_tree()
     return &tree;
 }
 
+typedef struct {
+    int client_socket;
+    int client_id;
+} ClientInfo;
+
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
     unsigned char *buffer = malloc(total_size);
@@ -91,8 +96,11 @@ Packet decode_message(int client_socket)
 
 void *handler(void *arg)
 {
-    int client_socket = *((int *)arg);
-    printf("%d\n", client_socket);
+    ClientInfo *client_info = (ClientInfo *)arg;
+    int client_socket = client_info->client_socket;
+    int client_id = client_info->client_id;
+
+    printf("Handling client %d\n", client_id);
     Packet packet = decode_message(client_socket);
 
     if (client_handler(client_socket, packet))
@@ -161,6 +169,8 @@ int main()
 
     printf("Server is running on %s:%d\n", SERVER_IP, SERVER_PORT);
 
+    int client_id = 0;
+
     while (1)
     {
         printf("Waiting for incoming connections...\n");
@@ -175,10 +185,11 @@ int main()
         }
 
         printf("New connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-
         pthread_t thread;
-        printf("%d\n", client_socket);
-        pthread_create(&thread, NULL, handler, &client_socket);
+        ClientInfo client_info = {client_socket, client_id};
+        pthread_create(&thread, NULL, handler, &client_info);
+
+        client_id++;
     }
 
     close(server_socket);

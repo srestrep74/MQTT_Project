@@ -87,6 +87,7 @@ void *receive_messages(void *arg) {
         data = read(client_socket, message, sizeof(message));
         if (data > 0) {
             printf("Received message from server: %s\n", message);
+            break;
         } else if (data == 0) {
             // El servidor cerró la conexión
             printf("Connection closed by server.\n");
