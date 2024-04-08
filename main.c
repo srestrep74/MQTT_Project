@@ -13,22 +13,14 @@ int main()
     // Ejemplo de uso
     TopicNode *root = createTopicNode("/");
 
-    const char *topic = "sensors/temperature/hot";
+    const char *topic = "sensors";
     TopicNode *node1 = getChildNode(root, topic);
     topic = "sensors/temperature/wet";
     TopicNode *node2 = getChildNode(root, topic);
     topic = "sensors/humidity";
     TopicNode *node3 = getChildNode(root, topic);
-    topic = "t1/t2/hot";
-    TopicNode *node4 = getChildNode(root, topic);
-    topic = "t1/t2/wet";
-    TopicNode *node5 = getChildNode(root, topic);
-    topic = "t1/t3";
-    TopicNode *node6 = getChildNode(root, topic);
-    topic = "sensors/humidity/hot";
-    TopicNode *node7 = getChildNode(root, topic);
 
-    const char *topics[] = {"sensors/+/hot", "sensors/#"};
+    /*const char *topics[] = {"sensors/+/hot", "sensors/#"};
     const int numTopics = sizeof(topics) / sizeof(topics[0]);
     const char *subscriber = "new_subscriber";
 
@@ -44,7 +36,7 @@ int main()
         {
             printf("- %s\n", subscribers[i]);
         }
-    }
+    }*/
 
     printTree(root, 0);
 
