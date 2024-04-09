@@ -37,10 +37,9 @@ void *receive_messages(void *arg)
     int client_socket = *(int *)arg;
     char message[1024];
     ssize_t data;
-    printf("PRIMEROA00");
+
     while (1)
     {
-        printf("RUNNGIN");
         data = read(client_socket, message, sizeof(message));
         if (data > 0)
         {
@@ -65,8 +64,7 @@ void *receive_messages(void *arg)
             break;
         }
     }
-    printf("SALIENDO");
-     // Salir del hilo
+
     pthread_exit(NULL);
 }
 
