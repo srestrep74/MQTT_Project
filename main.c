@@ -5,7 +5,7 @@
 #include <time.h>
 
 #include "include/server/topic_tree/topic_tree.h"
-#include "include/actions/subscribe.h"
+/*#include "include/actions/subscribe.h"*/
 #include "include/packet/packet.h"
 
 Packet create_sub(char **topics, int num_topics)

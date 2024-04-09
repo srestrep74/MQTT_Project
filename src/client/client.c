@@ -10,60 +10,16 @@
 
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
+#include "../../include/encoders/client_encoders.h"
 
-void print_buffer(unsigned char *buffer, size_t size)
-{
-    printf("Buffer content (hexadecimal):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        printf("%02X ", buffer[i]);
-    }
-    printf("\n");
+// Function to encode a message into a buffer
 
-    printf("Buffer content (ASCII):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        if (buffer[i] >= 32 && buffer[i] <= 126)
-        {
-            printf("%c ", buffer[i]);
-        }
-        else
-        {
-            printf(". ");
-        }
-    }
-    printf("\n");
-}
 
-unsigned char *encode_message(Packet packet, size_t total_size)
-{
-    unsigned char *buffer = malloc(total_size);
-    size_t offset = 0;
-
-    memcpy(buffer + offset, &(packet.fixed_header), sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
-
-    memcpy(buffer + offset, &(packet.remaining_length), sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
-
-    if (packet.variable_header)
-    {
-        memcpy(buffer + offset, packet.variable_header, packet.remaining_length);
-        offset += packet.remaining_length;
-    }
-
-    if (packet.payload)
-    {
-        memcpy(buffer + offset, packet.payload, packet.remaining_length);
-        offset += sizeof(packet.payload);
-    }
-    return buffer;
-}
-
+// Function to send a packet over a socket
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length + (packet.remaining_length - sizeof(packet.variable_header));
-    unsigned char *buffer = encode_message(packet, total_size);
+    unsigned char *buffer = encode_message_client(packet, total_size);
     write(client_socket, buffer, total_size);
 }
 
@@ -72,55 +28,35 @@ int create_socket()
     return socket(AF_INET, SOCK_STREAM, 0);
 }
 
-Packet decode_message(int client_socket)
-{
-    Packet packet = {0};
-    unsigned char buffer[1000];
+// Function to decode a message received from a socket
 
-    ssize_t data = read(client_socket, buffer, sizeof(buffer));
 
-    if (data == -1)
-        return packet;
-
-    size_t offset = 0;
-
-    memcpy(&(packet.fixed_header), buffer + offset, sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
-
-    memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
-
-    packet.variable_header = malloc(packet.variable_header);
-    memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
-    offset += packet.remaining_length;
-
-    size_t payload_size = data - offset;
-    packet.payload = malloc(sizeof(packet.payload));
-    memcpy(packet.payload, buffer + offset, sizeof(packet.payload));
-
-    return packet;
-}
-
+// Function to receive messages from the server
 void *receive_messages(void *arg)
 {
     int client_socket = *(int *)arg;
     char message[1024];
     ssize_t data;
-
+    printf("PRIMEROA00");
     while (1)
     {
-        // Leer el mensaje del servidor
+        printf("RUNNGIN");
         data = read(client_socket, message, sizeof(message));
         if (data > 0)
         {
-            printf("Received message from server: %s\n", message);
-            break;
+            printf("\n\x1b[35m╔══════════════════════════════════════════════════════╗\n");
+            printf("\x1b[35m║ \x1b[1mReceived message from server: \x1b[0m%s", message);
+            printf("\x1b[35m║\n");
+            printf("\x1b[35m╚══════════════════════════════════════════════════════╝\x1b[0m\n"); 
+            display_menu();
+            fflush(stdout);
+            continue;
         }
         else if (data == 0)
         {
-            // El servidor cerró la conexión
             printf("Connection closed by server.\n");
             close(client_socket);
+            pthread_exit(NULL);
             break;
         }
         else
@@ -129,8 +65,8 @@ void *receive_messages(void *arg)
             break;
         }
     }
-
-    // Salir del hilo
+    printf("SALIENDO");
+     // Salir del hilo
     pthread_exit(NULL);
 }
 
@@ -193,10 +129,10 @@ int main()
         Packet connect = create_connect_message();
         send_packet(client_socket, connect);
 
-        Packet connack = decode_message(client_socket);
+        Packet connack = decode_message_client(client_socket);
         if (get_type(&(connack.fixed_header)) != CONNACK)
         {
-            printf("Error: Respuesta no válida del servidor\n");
+            printf("Error: Invalid server response\n");
             close(client_socket);
             exit(EXIT_FAILURE);
         }
@@ -216,27 +152,15 @@ int main()
 
             while (1)
             {
-
-                printf("Select an option:\n");
-                printf("1. Subscriber\n");
-                printf("2. Publisher\n");
-                printf("3. Disconnect\n");
-                printf("Enter the number corresponding to your choice: ");
-
+                display_menu();
                 scanf("%d", &choice);
-
                 getchar();
 
                 switch (choice)
                 {
                 case 1:
-                    printf("You have selected Subscriber.\n");
-                    /*char topic_sub[100];
-                    printf("Enter the topic\n");
-                    fgets(topic_sub, sizeof(topic_sub), stdin);
-                    topic_sub[strcspn(topic_sub, "\n")] = '\0';
-                    Packet sub = create_subscribe_message(topic_sub);
-                    send_packet(client_socket, sub);*/
+                    printf("\nYou have selected: \x1b[32mSubscriber\x1b[0m\n");
+                    
 
                     int num_topics;
                     printf("Enter the number of topics : ");
@@ -266,22 +190,23 @@ int main()
 
                     break;
                 case 2:
-                    printf("You have selected Publisher.\n");
+                    printf("\nYou have selected: \x1b[34mPublisher\x1b[0m\n");
                     char topic[100], message[100];
-                    printf("Enter the topic\n");
+                    printf("\x1b[1mEnter the topic: \x1b[0m");
                     fgets(topic, sizeof(topic), stdin);
                     topic[strcspn(topic, "\n")] = '\0';
-                    printf("Enter the message\n");
+                    printf("\x1b[1mEnter the message: \x1b[0m");
                     fgets(message, sizeof(message), stdin);
                     Packet pub = create_publish_message(topic, message);
                     send_packet(client_socket, pub);
                     break;
                 case 3:
+                    printf("\nYou have selected: \x1b[31mDisconnect :( Bye bye!!!\x1b[0m\n ");
                     Packet disconnect = create_disconnect_message();
                     send_packet(client_socket, disconnect);
                     break;
                 default:
-                    printf("Invalid option. Please select 1 or 2.\n");
+                    printf("\nInvalid option. Please select \x1b[33m1\x1b[0m, \x1b[33m2\x1b[0m, or \x1b[33m3\x1b[0m.\n");
                     break;
                 }
             }

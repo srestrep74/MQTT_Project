@@ -7,6 +7,9 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "../packet/packet.h"
+
 char *generate_client_id();
+void display_menu();
 
 #endif

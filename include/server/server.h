@@ -16,6 +16,12 @@ typedef struct
     pthread_mutex_t mutex;
 } Tree;
 
+typedef struct
+{
+    int client_socket;
+    int client_id;
+} ClientInfo;
+
 Tree *get_tree();
 Packet decode_message(int);
 void send_packet(int client_socket, Packet packet);

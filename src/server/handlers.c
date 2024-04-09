@@ -28,6 +28,7 @@ bool client_handler(int client_socket, Packet client_packet)
 
 void publish_handler(Packet packet, TopicNode *root, const char *topic, const char *message)
 {
+    printf("%s\n", topic);
     TopicNode *node = getChildNode(root, topic);
     publishMessage(node, message);
     int numsubs = 0;
@@ -39,7 +40,6 @@ void publish_handler(Packet packet, TopicNode *root, const char *topic, const ch
         printf("BUENOSD AIS%d\n", subs[i]);
         write(subs[i], message, strlen(message));
     }
-    free(subs);
     printTree(root, 0);
 }
 

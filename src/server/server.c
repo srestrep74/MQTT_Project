@@ -9,6 +9,7 @@
 #include "../../include/server_constants.h"
 #include "../../include/actions/publish.h"
 #include "../../include/server/handlers.h"
+#include "../../include/encoders/server_encoders.h"
 
 #define MAX_CLIENTS 100
 
@@ -26,96 +27,11 @@ Tree *get_tree()
     return &tree;
 }
 
-typedef struct
-{
-    int client_socket;
-    int client_id;
-} ClientInfo;
-
-unsigned char *encode_message(Packet packet, size_t total_size)
-{
-    unsigned char *buffer = malloc(total_size);
-    size_t offset = 0;
-
-    memcpy(buffer + offset, &(packet.fixed_header), sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
-
-    memcpy(buffer + offset, &(packet.remaining_length), sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
-
-    if (packet.variable_header)
-    {
-        memcpy(buffer + offset, packet.variable_header, packet.remaining_length);
-        offset += packet.remaining_length;
-    }
-
-    if (packet.payload)
-    {
-        memcpy(buffer + offset, packet.payload, sizeof(packet.payload));
-        offset += sizeof(packet.payload);
-    }
-    return buffer;
-}
-
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
-    unsigned char *buffer = encode_message(packet, total_size);
+    unsigned char *buffer = encode_message_server(packet, total_size);
     write(client_socket, buffer, total_size);
-}
-
-void print_buffer(unsigned char *buffer, size_t size)
-{
-    printf("Buffer content (hexadecimal):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        printf("%02X ", buffer[i]);
-    }
-    printf("\n");
-
-    printf("Buffer content (ASCII):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        if (buffer[i] >= 32 && buffer[i] <= 126)
-        {
-            printf("%c ", buffer[i]);
-        }
-        else
-        {
-            printf(". ");
-        }
-    }
-    printf("\n");
-}
-
-Packet decode_message(int client_socket)
-{
-    Packet packet = {0};
-    unsigned char buffer[1000];
-
-    ssize_t data = read(client_socket, buffer, sizeof(buffer));
-
-    if (data == -1)
-        return packet;
-
-    size_t offset = 0;
-
-    memcpy(&(packet.fixed_header), buffer + offset, sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
-
-    memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
-
-    packet.variable_header = malloc(packet.remaining_length + 2);
-    memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
-    offset += packet.remaining_length;
-
-    size_t payload_size = data - offset;
-    packet.payload = malloc(payload_size + 1);
-    memcpy(packet.payload, buffer + offset, payload_size);
-    packet.payload[payload_size] = '\0';
-
-    return packet;
 }
 
 void *handler(void *arg)
@@ -125,14 +41,14 @@ void *handler(void *arg)
     int client_id = client_info->client_id;
 
     printf("Handling client %d\n", client_id);
-    Packet packet = decode_message(client_socket);
+    Packet packet = decode_message_server(client_socket);
 
     if (client_handler(client_socket, packet))
     {
         while (1)
         {
             // printf("Entre\n");
-            packet = decode_message(client_socket);
+            packet = decode_message_server(client_socket);
             if (get_type(&packet.fixed_header) == PUBLISH)
             {
                 const char *message = utf8_decode(packet.payload);
@@ -192,6 +108,7 @@ void *handler(void *arg)
     {
         printf("Error in CONNECT\n");
     }
+
     close(client_socket);
     return NULL;
 }

@@ -8,7 +8,7 @@
 #include "../constants.h"
 #include "../encoders/utf8.h"
 #include "../client/utils.h"
-#include "../actions/utils.h"
+#include "../actions/subscribe.h"
 
 typedef struct
 {
