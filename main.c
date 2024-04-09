@@ -13,7 +13,7 @@ int main()
     // Ejemplo de uso
     TopicNode *root = createTopicNode("/");
 
-    const char *topic = "sensors";
+    /*const char *topic = "sensors";
     TopicNode *node1 = getChildNode(root, topic);
     topic = "sensors/temperature/wet";
     TopicNode *node2 = getChildNode(root, topic);
@@ -40,8 +40,28 @@ int main()
         {
             printf("- %d\n", subscribers[i]);
         }
-    }
+    }*/
 
+    char topic[100], message[100];
+    printf("Enter the topic\n");
+    fgets(topic, sizeof(topic), stdin);
+    topic[strcspn(topic, "\n")] = '\0';
+    printf("Enter the message\n");
+    fgets(message, sizeof(message), stdin);
+    Packet pub = create_publish_message(topic, message);
+    TopicNode *node = getChildNode(root, topic);
+    publishMessage(node, message);
+    printTree(root, 0);
+
+    char topic1[100], message1[100];
+    printf("Enter the topic\n");
+    fgets(topic1, sizeof(topic1), stdin);
+    topic1[strcspn(topic1, "\n")] = '\0';
+    printf("Enter the message\n");
+    fgets(message1, sizeof(message1), stdin);
+    Packet pub1 = create_publish_message(topic1, message1);
+    TopicNode *node1 = getChildNode(root, topic1);
+    publishMessage(node1, message1);
     printTree(root, 0);
 
     // Liberar memoria utilizada por el árbol de tópicos
