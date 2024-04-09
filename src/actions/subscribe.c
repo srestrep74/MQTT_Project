@@ -2,7 +2,7 @@
 
 void subscribeToTopics(TopicNode *root, const char **topics, int numTopics, const int subscriber)
 {
-    if (root == NULL || topics == NULL )
+    if (root == NULL || topics == NULL)
         return;
 
     for (int i = 0; i < numTopics; ++i)
@@ -147,12 +147,11 @@ void addSubscriber(TopicNode *node, const int subscriber)
     // Verificar si el suscriptor ya está presente en la lista de suscriptores
     for (int i = 0; i < node->num_subscribers; ++i)
     {
-        if (strcmp(node->subscribers[i], subscriber) == 0)
+        if (node->subscribers[i] == subscriber)
             return; // El suscriptor ya está presente, no es necesario agregarlo nuevamente
     }
-
     // Añadir el suscriptor a la lista
     node->subscribers = realloc(node->subscribers, (node->num_subscribers + 1) * sizeof(char *));
-    node->subscribers[node->num_subscribers] = strdup(subscriber);
+    node->subscribers[node->num_subscribers] = subscriber;
     node->num_subscribers++;
 }

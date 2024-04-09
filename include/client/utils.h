@@ -8,5 +8,6 @@
 #include <time.h>
 
 char *generate_client_id();
+void display_menu();
 
 #endif

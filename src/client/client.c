@@ -11,6 +11,7 @@
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
 
+// Function to print the content of a buffer in hexadecimal and ASCII format
 void print_buffer(unsigned char *buffer, size_t size)
 {
     printf("Buffer content (hexadecimal):\n");
@@ -35,6 +36,7 @@ void print_buffer(unsigned char *buffer, size_t size)
     printf("\n");
 }
 
+// Function to encode a message into a buffer
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
     unsigned char *buffer = malloc(total_size);
@@ -60,6 +62,7 @@ unsigned char *encode_message(Packet packet, size_t total_size)
     return buffer;
 }
 
+// Function to send a packet over a socket
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length + (packet.remaining_length - sizeof(packet.variable_header));
@@ -72,6 +75,7 @@ int create_socket()
     return socket(AF_INET, SOCK_STREAM, 0);
 }
 
+// Function to decode a message received from a socket
 Packet decode_message(int client_socket)
 {
     Packet packet = {0};
@@ -101,6 +105,7 @@ Packet decode_message(int client_socket)
     return packet;
 }
 
+// Function to receive messages from the server
 void *receive_messages(void *arg)
 {
     int client_socket = *(int *)arg;
@@ -109,22 +114,22 @@ void *receive_messages(void *arg)
 
     while (1)
     {
-        // Leer el mensaje del servidor
         data = read(client_socket, message, sizeof(message));
         if (data > 0)
         {
-            printf("Received message from server: %s\n", message);
-            printf("Select an option:\n");
-            printf("1. Subscriber\n");
-            printf("2. Publisher\n");
-            printf("3. Disconnect\n");
-            printf("Enter the number corresponding to your choice: ");
+            printf("\n\x1b[35m╔══════════════════════════════════════════════════════╗\n");
+            printf("\x1b[35m║ \x1b[1mReceived message from server: \x1b[0m%s", message);
+            printf("\x1b[35m║\n");
+            printf("\x1b[35m╚══════════════════════════════════════════════════════╝\x1b[0m\n"); 
+            display_menu();
             fflush(stdout);
             continue;
-        } else if (data == 0) {
-            // El servidor cerró la conexión
+        }
+        else if (data == 0)
+        {
             printf("Connection closed by server.\n");
             close(client_socket);
+            pthread_exit(NULL);
             break;
         }
         else
@@ -134,8 +139,6 @@ void *receive_messages(void *arg)
         }
     }
 
-    // Salir del hilo
-    pthread_exit(NULL);
 }
 
 int main()
@@ -171,7 +174,7 @@ int main()
         Packet connack = decode_message(client_socket);
         if (get_type(&(connack.fixed_header)) != CONNACK)
         {
-            printf("Error: Respuesta no válida del servidor\n");
+            printf("Error: Invalid server response\n");
             close(client_socket);
             exit(EXIT_FAILURE);
         }
@@ -191,45 +194,39 @@ int main()
 
             while (1)
             {
-
-                printf("Select an option:\n");
-                printf("1. Subscriber\n");
-                printf("2. Publisher\n");
-                printf("3. Disconnect\n");
-                printf("Enter the number corresponding to your choice: ");
-
+                display_menu();
                 scanf("%d", &choice);
-
                 getchar();
 
                 switch (choice)
                 {
                 case 1:
-                    printf("You have selected Subscriber.\n");
+                    printf("\nYou have selected: \x1b[32mSubscriber\x1b[0m\n");
                     char topic_sub[100];
-                    printf("Enter the topic\n");
+                    printf("\x1b[1mEnter the topic: \x1b[0m");
                     fgets(topic_sub, sizeof(topic_sub), stdin);
                     topic_sub[strcspn(topic_sub, "\n")] = '\0';
                     Packet sub = create_subscribe_message(topic_sub);
                     send_packet(client_socket, sub);
                     break;
                 case 2:
-                    printf("You have selected Publisher.\n");
+                    printf("\nYou have selected: \x1b[34mPublisher\x1b[0m\n");
                     char topic[100], message[100];
-                    printf("Enter the topic\n");
+                    printf("\x1b[1mEnter the topic: \x1b[0m");
                     fgets(topic, sizeof(topic), stdin);
                     topic[strcspn(topic, "\n")] = '\0';
-                    printf("Enter the message\n");
+                    printf("\x1b[1mEnter the message: \x1b[0m");
                     fgets(message, sizeof(message), stdin);
                     Packet pub = create_publish_message(topic, message);
                     send_packet(client_socket, pub);
                     break;
                 case 3:
+                    printf("\nYou have selected: \x1b[31mDisconnect :( Bye bye!!!\x1b[0m\n ");
                     Packet disconnect = create_disconnect_message();
                     send_packet(client_socket, disconnect);
                     break;
                 default:
-                    printf("Invalid option. Please select 1 or 2.\n");
+                    printf("\nInvalid option. Please select \x1b[33m1\x1b[0m, \x1b[33m2\x1b[0m, or \x1b[33m3\x1b[0m.\n");
                     break;
                 }
             }

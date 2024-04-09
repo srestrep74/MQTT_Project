@@ -38,3 +38,15 @@ char *generate_client_id()
 
     return client_id;
 }
+
+void display_menu() {
+    printf("\n");
+    printf("===========================================\n");
+    printf("                  Menu                     \n");
+    printf("===========================================\n");
+    printf("1. Subscriber\n");
+    printf("2. Publisher\n");
+    printf("3. Disconnect\n");
+    printf("===========================================\n");
+    printf("Enter the number corresponding to your choice: ");
+}
