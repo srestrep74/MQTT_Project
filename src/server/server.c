@@ -27,42 +27,11 @@ Tree *get_tree()
     return &tree;
 }
 
-typedef struct
-{
-    int client_socket;
-    int client_id;
-} ClientInfo;
-
-
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
     unsigned char *buffer = encode_message_server(packet, total_size);
     write(client_socket, buffer, total_size);
-}
-
-void print_buffer(unsigned char *buffer, size_t size)
-{
-    printf("Buffer content (hexadecimal):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        printf("%02X ", buffer[i]);
-    }
-    printf("\n");
-
-    printf("Buffer content (ASCII):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        if (buffer[i] >= 32 && buffer[i] <= 126)
-        {
-            printf("%c ", buffer[i]);
-        }
-        else
-        {
-            printf(". ");
-        }
-    }
-    printf("\n");
 }
 
 void *handler(void *arg)
@@ -137,6 +106,7 @@ void *handler(void *arg)
     {
         printf("Error in CONNECT\n");
     }
+
     close(client_socket);
     return NULL;
 }
