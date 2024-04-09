@@ -43,11 +43,9 @@ void publish_handler(Packet packet, TopicNode *root, const char *topic, const ch
     printTree(root, 0);
 }
 
-void subscribe_handler(Packet packet, TopicNode *root, const char *topic, int client_socket)
+void subscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket)
 {
-    printf("%d\n", client_socket);
-    char *topics[] = {topic};
+    // char *topics[] = {topic};
     int num_topics = sizeof(topics) / sizeof(topics[0]);
     subscribeToTopics(root, topics, num_topics, client_socket);
-    TopicNode *node = getChildNode(root, topic);
 }

@@ -134,6 +134,35 @@ void *receive_messages(void *arg)
     pthread_exit(NULL);
 }
 
+Packet create_sub(char **topics, int num_topics)
+{
+    Packet sub;
+    printf("%d\n", num_topics);
+    set_type(&sub.fixed_header, SUBSCRIBE);
+
+    int payload_size = 0;
+    for (int i = 0; i < num_topics; i++)
+    {
+        payload_size += strlen(topics[i]) + 2;
+    }
+
+    sub.payload = (unsigned char *)malloc(payload_size);
+    int offset = 0;
+    for (int i = 0; i < num_topics; i++)
+    {
+        int topic_length = strlen(topics[i]);
+        sub.payload[offset++] = (unsigned char)topic_length;
+        memcpy(&sub.payload[offset], topics[i], topic_length);
+        sub.payload[offset + topic_length] = 0x00;
+        offset += topic_length + 1;
+    }
+
+    sub.payload[payload_size - 1] = 0x00;
+    sub.remaining_length = 2 + payload_size;
+
+    return sub;
+}
+
 int main()
 {
     int client_socket;
@@ -202,12 +231,39 @@ int main()
                 {
                 case 1:
                     printf("You have selected Subscriber.\n");
-                    char topic_sub[100];
+                    /*char topic_sub[100];
                     printf("Enter the topic\n");
                     fgets(topic_sub, sizeof(topic_sub), stdin);
                     topic_sub[strcspn(topic_sub, "\n")] = '\0';
                     Packet sub = create_subscribe_message(topic_sub);
+                    send_packet(client_socket, sub);*/
+
+                    int num_topics;
+                    printf("Enter the number of topics : ");
+                    if (scanf("%d", &num_topics) != 1 || num_topics <= 0)
+                    {
+                        printf("Invalid number of topics. \n");
+                        return 1;
+                    }
+                    const char **topics = (const char **)malloc(num_topics * sizeof(const char *));
+                    printf("Enter the topics : \n");
+
+                    char topicc[100];
+                    for (int i = 0; i < num_topics; i++)
+                    {
+                        printf("Topic %d: ", i + 1);
+                        if (scanf("%s", topicc) != 1)
+                        {
+                            printf("Error receiving the topic. \n");
+                            free(topics);
+                            return 1;
+                        }
+                        topics[i] = strdup(topicc);
+                    }
+
+                    Packet sub = create_sub(topics, num_topics);
                     send_packet(client_socket, sub);
+
                     break;
                 case 2:
                     printf("You have selected Publisher.\n");
