@@ -153,15 +153,17 @@ void *handler(void *arg)
                     int topic_length = packet.payload[offset++];
 
                     // Reservar memoria para el tópico y copiarlo
-                    char *topic = (char *)malloc(topic_length + 1); // +1 para el carácter nulo
+                    char *topic = (char *)malloc(topic_length + 2); // +1 para el carácter nulo
                     memcpy(topic, &packet.payload[offset], topic_length);
-                    topic[topic_length] = '\0'; // Agregar el carácter nulo al final
+                    // topic[topic_length] = '\0'; // Agregar el carácter nulo al final
 
                     // Incrementar el desplazamiento
-                    offset += topic_length + 1;
+                    offset += topic_length + 2;
                     num_topics++;
                     topics = (char **)realloc(topics, num_topics * sizeof(char *));
-                    topics[num_topics - 1] = topic;
+                    printf("topic : %s", topic);
+                    topics[num_topics - 1] = utf8_decode(topic);
+                    topic[topic_length] = '\0';
                 }
 
                 for (int i = 0; i < num_topics - 1; i++)

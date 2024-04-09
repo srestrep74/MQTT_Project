@@ -258,9 +258,9 @@ int main()
                             free(topics);
                             return 1;
                         }
-                        topics[i] = strdup(topicc);
+                        topics[i] = utf8_encode(strdup(topicc));
                     }
-
+                    printf("Envia");
                     Packet sub = create_sub(topics, num_topics);
                     send_packet(client_socket, sub);
 
