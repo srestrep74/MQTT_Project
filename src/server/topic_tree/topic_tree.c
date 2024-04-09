@@ -19,7 +19,6 @@ TopicNode *createTopicNode(const char *name)
 // Función para buscar o crear un nodo hijo en el árbol de tópicos
 TopicNode *getChildNode(TopicNode *parent, const char *topic)
 {
-    printf("entire%s\n", topic);
     if (parent == NULL || topic == NULL)
         return NULL;
 
@@ -46,7 +45,6 @@ TopicNode *getChildNode(TopicNode *parent, const char *topic)
 
 TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
 {
-    printf("%s\n", name);
     TopicNode *child = parent->children;
     while (child != NULL)
     {
@@ -55,13 +53,32 @@ TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
         child = child->next_sibling;
     }
 
-    
+    // Crear un nuevo nodo hijo
     TopicNode *newChild = createTopicNode(name);
-    if (newChild != NULL)
+    if (newChild == NULL)
+        return NULL;
+
+    // Suscribir a los suscriptores del padre al nuevo nodo hijo
+    int numSubscribers = 0;
+    int **subscribers = getSubscribers(parent, &numSubscribers);
+    if (subscribers != NULL)
     {
-        newChild->next_sibling = parent->children;
-        parent->children = newChild;
+        newChild->subscribers = (int **)malloc(numSubscribers * sizeof(int *));
+        if (newChild->subscribers != NULL)
+        {
+            for (int i = 0; i < numSubscribers; i++)
+            {
+                newChild->subscribers[i] = subscribers[i];
+            }
+            newChild->num_subscribers = numSubscribers;
+        }
+        // free(subscribers);
     }
+
+    // Agregar el nuevo nodo hijo a la lista de hijos del padre
+    newChild->next_sibling = parent->children;
+    parent->children = newChild;
+
     return newChild;
 }
 
@@ -71,9 +88,6 @@ int **getSubscribers(TopicNode *node, int *numSubscribers)
         return NULL;
 
     *numSubscribers = node->num_subscribers;
-    for (int i = 0; i < *numSubscribers; i++) {
-        printf("Subscriber %d: %p\n", i + 1, (void *)node->subscribers[i]);
-    }
     return node->subscribers;
 }
 

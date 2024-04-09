@@ -77,14 +77,13 @@ void *handler(void *arg)
                     offset += topic_length + 2;
                     num_topics++;
                     topics = (char **)realloc(topics, num_topics * sizeof(char *));
-                    printf("topic : %s", topic);
-                    topics[num_topics - 1] = utf8_decode(topic);
+                    topics[num_topics - 1] = topic;
                     topic[topic_length] = '\0';
                 }
 
                 for (int i = 0; i < num_topics - 1; i++)
                 {
-                    printf("Topic : %s\n", topics[i]);
+                    printf("Topic tree: %s\n", topics[i]);
                 }
                 Tree *tree = get_tree();
                 pthread_mutex_lock(&tree->mutex);

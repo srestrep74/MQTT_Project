@@ -11,7 +11,6 @@
 Packet create_sub(char **topics, int num_topics)
 {
     Packet sub;
-    printf("%d\n", num_topics);
     set_type(&sub.fixed_header, SUBSCRIBE);
 
     int payload_size = 0;
@@ -61,7 +60,7 @@ void log_transaction(const char *log_file, const char *client_ip, const char *qu
     fclose(file);
 }
 
-int main()
+/*int main()
 {
 
     const char *topics[] = {"topic1", "topic2", "topic3"};
@@ -91,12 +90,12 @@ int main()
     }
 
     return 0;
-}
+}*/
 
-/*int main(int argc, char *argv[])
+int main()
 {
 
-    if (argc != 2)
+    /*if (argc != 2)
     {
         printf("Using : %s </path/log.log>\n", argv[0]);
         return 1;
@@ -110,7 +109,7 @@ int main()
     strcpy(client_ip, "192.168.1.100");
     strcpy(query, "PUBLISH");
     strcpy(response_ip, "192.168.1.1");
-    log_transaction(log_file, client_ip, query, response_ip);
+    log_transaction(log_file, client_ip, query, response_ip);*/
 
     // Ejemplo de uso
     TopicNode *root = createTopicNode("/");
@@ -126,7 +125,7 @@ int main()
     topic = "sensors";
     TopicNode *node5 = getChildNode(root, topic);
 
-    const char *topics[] = {"sensors/+/wet"};
+    const char *topics[] = {"sensors/#"};
     const int numTopics = sizeof(topics) / sizeof(topics[0]);
     int subscriber = 10;
 
@@ -137,37 +136,28 @@ int main()
     int **subscribers = getSubscribers(test, &numSubscribers);
     if (subscribers != NULL)
     {
-        printf("Los suscriptores del tópico : \n");
+        printf("Los suscriptores del tópico sensors/temperature/wet: \n");
         for (int i = 0; i < numSubscribers; i++)
         {
             printf("- %d\n", subscribers[i]);
         }
     }
-
-    char topic[100], message[100];
-    printf("Enter the topic\n");
-    fgets(topic, sizeof(topic), stdin);
-    topic[strcspn(topic, "\n")] = '\0';
-    printf("Enter the message\n");
-    fgets(message, sizeof(message), stdin);
-    Packet pub = create_publish_message(topic, message);
-    TopicNode *node = getChildNode(root, topic);
-    publishMessage(node, message);
-    printTree(root, 0);
-
-    char topic1[100], message1[100];
-    printf("Enter the topic\n");
-    fgets(topic1, sizeof(topic1), stdin);
-    topic1[strcspn(topic1, "\n")] = '\0';
-    printf("Enter the message\n");
-    fgets(message1, sizeof(message1), stdin);
-    Packet pub1 = create_publish_message(topic1, message1);
-    TopicNode *node1 = getChildNode(root, topic1);
-    publishMessage(node1, message1);
-    printTree(root, 0);
+    topic = "sensors/sebas";
+    TopicNode *node88 = getChildNode(root, topic);
+    numSubscribers = 0;
+    TopicNode *testt = getChildNode(root, "sensors/sebas");
+    int **subscriberss = getSubscribers(testt, &numSubscribers);
+    if (subscriberss != NULL)
+    {
+        printf("Los suscriptores del tópico sensors/sebas : \n");
+        for (int i = 0; i < numSubscribers; i++)
+        {
+            printf("- %d\n", subscriberss[i]);
+        }
+    }
 
     // Liberar memoria utilizada por el árbol de tópicos
-    freeTopicTree(root);
+    // freeTopicTree(root);
     /*char *client_id = generate_client_id();
     printf("ID  Antes: %s\n", client_id);
     Packet connect = create_connect(client_id);
@@ -175,5 +165,6 @@ int main()
     char *id = utf8_decode(connect.payload);
     printf("ID  Despues: %s\n", id);
 
+    return 0;*/
     return 0;
-}*/
+}
