@@ -8,6 +8,7 @@
 #include <pthread.h>
 
 #include "../../include/server/topic_tree/topic_tree.h"
+#include "../packet/packet.h"
 
 typedef struct
 {
@@ -16,5 +17,7 @@ typedef struct
 } Tree;
 
 Tree *get_tree();
+Packet decode_message(int);
+void send_packet(int client_socket, Packet packet);
 
 #endif

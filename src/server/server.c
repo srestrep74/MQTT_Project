@@ -26,6 +26,12 @@ Tree *get_tree()
     return &tree;
 }
 
+typedef struct
+{
+    int client_socket;
+    int client_id;
+} ClientInfo;
+
 unsigned char *encode_message(Packet packet, size_t total_size)
 {
     unsigned char *buffer = malloc(total_size);
@@ -114,28 +120,48 @@ Packet decode_message(int client_socket)
 
 void *handler(void *arg)
 {
-    int client_socket = *((int *)arg);
+    ClientInfo *client_info = (ClientInfo *)arg;
+    int client_socket = client_info->client_socket;
+    int client_id = client_info->client_id;
+
+    printf("Handling client %d\n", client_id);
     Packet packet = decode_message(client_socket);
 
     if (client_handler(client_socket, packet))
     {
-        printf("Success CONNECT\n");
+        while (1)
+        {
+            // printf("Entre\n");
+            packet = decode_message(client_socket);
+            if (get_type(&packet.fixed_header) == PUBLISH)
+            {
+                const char *message = utf8_decode(packet.payload);
+                char *topic = utf8_decode(get_topic(&packet));
+                Tree *tree = get_tree();
+                pthread_mutex_lock(&tree->mutex);
+                publish_handler(packet, tree->root, topic, message);
+                pthread_mutex_unlock(&tree->mutex);
+            }
+            else if (get_type(&packet.fixed_header) == SUBSCRIBE)
+            {
+                char *topic = utf8_decode(packet.payload);
+
+                Tree *tree = get_tree();
+                pthread_mutex_lock(&tree->mutex);
+                subscribe_handler(packet, tree->root, topic, client_socket);
+                pthread_mutex_unlock(&tree->mutex);
+            }
+            else if (get_type(&packet.fixed_header) == DISCONNECT)
+            {
+                close(client_socket);
+                break;
+            }
+        }
     }
     else
     {
         printf("Error in CONNECT\n");
     }
-
-    /*if (get_type(&packet.fixed_header) == PUBLISH)
-    {
-        const char *message = utf8_decode(packet.payload);
-        char *topic = utf8_decode(get_topic(&packet));
-
-        Tree *tree = get_tree();
-        pthread_mutex_lock(&tree->mutex);
-        publish_handler(packet, tree->root, topic, message);
-        pthread_mutex_unlock(&tree->mutex);
-    }*/
     close(client_socket);
     return NULL;
 }
@@ -172,6 +198,8 @@ int main()
 
     printf("Server is running on %s:%d\n", SERVER_IP, SERVER_PORT);
 
+    int client_id = 0;
+
     while (1)
     {
         printf("Waiting for incoming connections...\n");
@@ -186,9 +214,11 @@ int main()
         }
 
         printf("New connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-
         pthread_t thread;
-        pthread_create(&thread, NULL, handler, &client_socket);
+        ClientInfo client_info = {client_socket, client_id};
+        pthread_create(&thread, NULL, handler, &client_info);
+
+        client_id++;
     }
 
     close(server_socket);

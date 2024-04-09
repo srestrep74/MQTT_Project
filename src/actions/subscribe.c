@@ -1,8 +1,8 @@
 #include "../../include/actions/subscribe.h"
 
-void subscribeToTopics(TopicNode *root, const char **topics, int numTopics, const char *subscriber)
+void subscribeToTopics(TopicNode *root, const char **topics, int numTopics, const int subscriber)
 {
-    if (root == NULL || topics == NULL || subscriber == NULL)
+    if (root == NULL || topics == NULL)
         return;
 
     for (int i = 0; i < numTopics; ++i)
@@ -33,9 +33,9 @@ void subscribeToTopics(TopicNode *root, const char **topics, int numTopics, cons
     }
 }
 
-void subscribeToWildcardPlus(TopicNode *node, const char *pattern, const char *subscriber)
+void subscribeToWildcardPlus(TopicNode *node, const char *pattern, const int subscriber)
 {
-    if (node == NULL || pattern == NULL || subscriber == NULL)
+    if (node == NULL || pattern == NULL )
         return;
 
     // Creamos una copia del patrón para no modificar el original
@@ -85,9 +85,9 @@ void subscribeToWildcardPlus(TopicNode *node, const char *pattern, const char *s
 }
 
 // Función para suscribir un cliente a todos los hijos de un tópico dado
-void subscribeToChildrenBeforeWildcard(TopicNode *root, const char *topic, const char *subscriber)
+void subscribeToChildrenBeforeWildcard(TopicNode *root, const char *topic, const int subscriber)
 {
-    if (root == NULL || topic == NULL || subscriber == NULL)
+    if (root == NULL || topic == NULL )
         return;
 
     // Creamos una copia del tópico para no modificar el original
@@ -121,9 +121,9 @@ void subscribeToChildrenBeforeWildcard(TopicNode *root, const char *topic, const
     free(partialTopic);
 }
 
-void subscribeToChildren(TopicNode *node, const char *subscriber)
+void subscribeToChildren(TopicNode *node, const int subscriber)
 {
-    if (node == NULL || subscriber == NULL)
+    if (node == NULL )
         return;
 
     // Suscribir al cliente al nodo actual
@@ -139,20 +139,19 @@ void subscribeToChildren(TopicNode *node, const char *subscriber)
 }
 
 // Función para agregar un suscriptor a un nodo del árbol
-void addSubscriber(TopicNode *node, const char *subscriber)
+void addSubscriber(TopicNode *node, const int subscriber)
 {
-    if (node == NULL || subscriber == NULL)
+    if (node == NULL )
         return;
 
     // Verificar si el suscriptor ya está presente en la lista de suscriptores
     for (int i = 0; i < node->num_subscribers; ++i)
     {
-        if (strcmp(node->subscribers[i], subscriber) == 0)
+        if (node->subscribers[i] == subscriber)
             return; // El suscriptor ya está presente, no es necesario agregarlo nuevamente
     }
-
     // Añadir el suscriptor a la lista
     node->subscribers = realloc(node->subscribers, (node->num_subscribers + 1) * sizeof(char *));
-    node->subscribers[node->num_subscribers] = strdup(subscriber);
+    node->subscribers[node->num_subscribers] = subscriber;
     node->num_subscribers++;
 }

@@ -63,7 +63,7 @@ TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
     return newChild;
 }
 
-char **getSubscribers(TopicNode *node, int *numSubscribers)
+int **getSubscribers(TopicNode *node, int *numSubscribers)
 {
     if (node == NULL || numSubscribers == NULL)
         return NULL;

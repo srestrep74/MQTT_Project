@@ -3,10 +3,10 @@
 
 #include "../server/topic_tree/topic_tree.h"
 
-void subscribeToTopics(TopicNode *, const char **, int, const char *);
-void subscribeToWildcardPlus(TopicNode *, const char *, const char *);
-void subscribeToChildrenBeforeWildcard(TopicNode *, const char *, const char *); // Cambiar nombre
-void subscribeToChildren(TopicNode *, const char *);
-void addSubscriber(TopicNode *, const char *);
+void subscribeToTopics(TopicNode *, const char **, int, const int);
+void subscribeToWildcardPlus(TopicNode *, const char *, const int);
+void subscribeToChildrenBeforeWildcard(TopicNode *, const char *, const int); // Cambiar nombre
+void subscribeToChildren(TopicNode *, const int);
+void addSubscriber(TopicNode *, const int);
 
 #endif

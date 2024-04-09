@@ -1,5 +1,6 @@
 #include "../../include/packet/packet.h"
 
+<<<<<<< HEAD
 void set_qos(uint8_t *fixed_header, int qos)
 {
     *fixed_header &= ~(0b11 << 1);
@@ -34,6 +35,10 @@ uint8_t get_type(uint8_t *fixed_header)
 int get_qos(uint8_t *fixed_header)
 {
     return (*fixed_header >> 1) & 0x03;
+=======
+uint8_t get_type(uint8_t *fixed_header) {
+    return (*fixed_header >> 4) & 0b00001111;
+>>>>>>> Luisa
 }
 
 void set_remaining_length(uint8_t *remaining_length, size_t packet_length)
@@ -87,12 +92,17 @@ Packet create_connect_message()
 
     connect.payload = malloc(id_length + 1);
     memcpy(connect.payload, id, id_length + 1);
+    free(id);
 
     return connect;
 }
 
+<<<<<<< HEAD
 Packet create_connack_message(uint8_t return_code)
 {
+=======
+Packet create_connack_message(uint8_t return_code) {
+>>>>>>> Luisa
     Packet connack;
 
     set_type(&(connack.fixed_header), CONNACK);
@@ -100,9 +110,14 @@ Packet create_connack_message(uint8_t return_code)
     set_remaining_length(&(connack.remaining_length), 2);
 
     connack.variable_header = malloc(2);
+<<<<<<< HEAD
     if (connack.variable_header == NULL)
     {
         fprintf(stderr, "Error: Can't assign memory in CONNACK variable header..\n");
+=======
+    if (connack.variable_header == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para el encabezado variable del CONNACK.\n");
+>>>>>>> Luisa
         exit(EXIT_FAILURE);
     }
 
@@ -138,6 +153,7 @@ Packet create_publish_message(const char *topic, const char *data)
     return publish;
 }
 
+<<<<<<< HEAD
 Packet create_disconnect_message()
 {
     Packet disconnect;
@@ -148,4 +164,63 @@ Packet create_disconnect_message()
     disconnect.payload = NULL;
 
     return disconnect;
+=======
+Packet create_subscribe_message(const char *topic)
+{
+    Packet subscribe;
+
+    uint16_t id = get_packet_id();
+    set_type(&(subscribe.fixed_header), SUBSCRIBE);
+    set_qos(&(subscribe.fixed_header), 1);
+    
+    size_t id_length = sizeof(id); 
+
+    subscribe.variable_header = malloc(id_length);
+    
+    memcpy(subscribe.variable_header, &id, id_length);
+
+
+    uint8_t *topic_encoded = utf8_encode(topic);
+
+    size_t topic_length = strlen(topic) + 2;
+
+    size_t packet_length = 2 + topic_length;
+    set_remaining_length(&(subscribe.remaining_length), packet_length);
+
+    subscribe.payload = malloc(topic_length + 1);
+    memcpy(subscribe.payload, topic_encoded, topic_length + 1);
+
+    return subscribe;
+
+}
+
+void set_qos(uint8_t *fixed_header, int qos)
+{
+    *fixed_header &= ~(0b11 << 1);
+
+    switch (qos)
+    {
+    case 0:
+        break;
+    case 1:
+        *fixed_header |= (1 << 1);
+        break;
+    case 2:
+        *fixed_header |= (2 << 1);
+        break;
+    default:
+        printf("Qos not valid \n");
+        break;
+    }
+}
+
+void set_type(u_int8_t *fixed_header, u_int8_t type)
+{
+    *fixed_header &= ~(0b1111 << 4);
+    *fixed_header |= (type << 4) & (0b1111 << 4);
+}
+
+uint8_t get_qos(uint8_t *fixed_header) {
+    return (*fixed_header >> 1) & 0b11; 
+>>>>>>> Luisa
 }

@@ -1,14 +1,14 @@
 #ifndef HANDLERS_H
 #define HANDLERS_H
 
-#include "../packet/packet.h"
-#include "topic_tree/topic_tree.h"
-#include "../actions/publish.h"
-#include "../constants.h"
-
 #include <stdbool.h>
 
-void publish_handler(Packet, TopicNode *, const char *, const char *);
+#include "../packet/packet.h"
+#include "../constants.h"
+#include "server.h"
+
 bool client_handler(int, Packet);
+void publish_handler(Packet, TopicNode *, const char *, const char *);
+void subscribe_handler(Packet, TopicNode *, const char *, int);
 
 #endif
