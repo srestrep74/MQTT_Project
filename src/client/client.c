@@ -120,6 +120,7 @@ void *receive_messages(void *arg)
         {
             // El servidor cerró la conexión
             printf("Connection closed by server.\n");
+            close(client_socket);
             break;
         }
         else
@@ -220,6 +221,8 @@ int main()
                     send_packet(client_socket, pub);
                     break;
                 case 3:
+                    Packet disconnect = create_disconnect_message();
+                    send_packet(client_socket, disconnect);
                     break;
                 default:
                     printf("Invalid option. Please select 1 or 2.\n");
