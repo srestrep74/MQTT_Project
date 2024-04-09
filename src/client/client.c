@@ -10,63 +10,16 @@
 
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
-
-// Function to print the content of a buffer in hexadecimal and ASCII format
-void print_buffer(unsigned char *buffer, size_t size)
-{
-    printf("Buffer content (hexadecimal):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        printf("%02X ", buffer[i]);
-    }
-    printf("\n");
-
-    printf("Buffer content (ASCII):\n");
-    for (size_t i = 0; i < size; i++)
-    {
-        if (buffer[i] >= 32 && buffer[i] <= 126)
-        {
-            printf("%c ", buffer[i]);
-        }
-        else
-        {
-            printf(". ");
-        }
-    }
-    printf("\n");
-}
+#include "../../include/encoders/client_encoders.h"
 
 // Function to encode a message into a buffer
-unsigned char *encode_message(Packet packet, size_t total_size)
-{
-    unsigned char *buffer = malloc(total_size);
-    size_t offset = 0;
 
-    memcpy(buffer + offset, &(packet.fixed_header), sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
-
-    memcpy(buffer + offset, &(packet.remaining_length), sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
-
-    if (packet.variable_header)
-    {
-        memcpy(buffer + offset, packet.variable_header, packet.remaining_length);
-        offset += packet.remaining_length;
-    }
-
-    if (packet.payload)
-    {
-        memcpy(buffer + offset, packet.payload, packet.remaining_length);
-        offset += sizeof(packet.payload);
-    }
-    return buffer;
-}
 
 // Function to send a packet over a socket
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length + (packet.remaining_length - sizeof(packet.variable_header));
-    unsigned char *buffer = encode_message(packet, total_size);
+    unsigned char *buffer = encode_message_client(packet, total_size);
     write(client_socket, buffer, total_size);
 }
 
@@ -76,34 +29,7 @@ int create_socket()
 }
 
 // Function to decode a message received from a socket
-Packet decode_message(int client_socket)
-{
-    Packet packet = {0};
-    unsigned char buffer[1000];
 
-    ssize_t data = read(client_socket, buffer, sizeof(buffer));
-
-    if (data == -1)
-        return packet;
-
-    size_t offset = 0;
-
-    memcpy(&(packet.fixed_header), buffer + offset, sizeof(packet.fixed_header));
-    offset += sizeof(packet.fixed_header);
-
-    memcpy(&(packet.remaining_length), buffer + offset, sizeof(packet.remaining_length));
-    offset += sizeof(packet.remaining_length);
-
-    packet.variable_header = malloc(packet.variable_header);
-    memcpy(packet.variable_header, buffer + offset, packet.remaining_length);
-    offset += packet.remaining_length;
-
-    size_t payload_size = data - offset;
-    packet.payload = malloc(sizeof(packet.payload));
-    memcpy(packet.payload, buffer + offset, sizeof(packet.payload));
-
-    return packet;
-}
 
 // Function to receive messages from the server
 void *receive_messages(void *arg)
@@ -203,7 +129,7 @@ int main()
         Packet connect = create_connect_message();
         send_packet(client_socket, connect);
 
-        Packet connack = decode_message(client_socket);
+        Packet connack = decode_message_client(client_socket);
         if (get_type(&(connack.fixed_header)) != CONNACK)
         {
             printf("Error: Invalid server response\n");
