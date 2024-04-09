@@ -26,6 +26,7 @@ bool client_handler(int client_socket, Packet client_packet)
 
 void publish_handler(Packet packet, TopicNode *root, const char *topic, const char *message)
 {
+    printf("%s\n", topic);
     TopicNode *node = getChildNode(root, topic);
     publishMessage(node, message);
     int numsubs = 0;

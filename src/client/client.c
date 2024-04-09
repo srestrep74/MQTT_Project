@@ -83,11 +83,17 @@ void *receive_messages(void *arg) {
     ssize_t data;
 
     while (1) {
-        // Leer el mensaje del servidor
+
         data = read(client_socket, message, sizeof(message));
         if (data > 0) {
             printf("Received message from server: %s\n", message);
-            break;
+            printf("Select an option:\n");
+            printf("1. Subscriber\n");
+            printf("2. Publisher\n");
+            printf("3. Disconnect\n");
+            printf("Enter the number corresponding to your choice: ");
+            fflush(stdout);
+            continue;
         } else if (data == 0) {
             // El servidor cerró la conexión
             printf("Connection closed by server.\n");
