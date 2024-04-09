@@ -71,6 +71,9 @@ int **getSubscribers(TopicNode *node, int *numSubscribers)
         return NULL;
 
     *numSubscribers = node->num_subscribers;
+    for (int i = 0; i < *numSubscribers; i++) {
+        printf("Subscriber %d: %p\n", i + 1, (void *)node->subscribers[i]);
+    }
     return node->subscribers;
 }
 
