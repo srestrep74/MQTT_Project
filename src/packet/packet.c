@@ -1,6 +1,7 @@
 #include "../../include/packet/packet.h"
 
-uint8_t get_type(uint8_t *fixed_header) {
+uint8_t get_type(uint8_t *fixed_header)
+{
     return (*fixed_header >> 4) & 0b00001111;
 }
 
@@ -56,7 +57,8 @@ Packet create_connect_message()
     return connect;
 }
 
-Packet create_connack_message(uint8_t return_code) {
+Packet create_connack_message(uint8_t return_code)
+{
     Packet connack;
 
     set_type(&(connack.fixed_header), CONNACK);
@@ -64,7 +66,8 @@ Packet create_connack_message(uint8_t return_code) {
     set_remaining_length(&(connack.remaining_length), 2);
 
     connack.variable_header = malloc(2);
-    if (connack.variable_header == NULL) {
+    if (connack.variable_header == NULL)
+    {
         fprintf(stderr, "Error: No se pudo asignar memoria para el encabezado variable del CONNACK.\n");
         exit(EXIT_FAILURE);
     }
@@ -101,6 +104,18 @@ Packet create_publish_message(const char *topic, const char *data)
     return publish;
 }
 
+Packet create_disconnect_message()
+{
+    Packet disconnect;
+    set_type(&(disconnect.fixed_header), DISCONNECT);
+    set_qos(&disconnect.fixed_header, 0);
+
+    disconnect.variable_header = NULL;
+    disconnect.payload = NULL;
+
+    return disconnect;
+}
+
 Packet create_subscribe_message(const char *topic)
 {
     Packet subscribe;
@@ -108,13 +123,12 @@ Packet create_subscribe_message(const char *topic)
     uint16_t id = get_packet_id();
     set_type(&(subscribe.fixed_header), SUBSCRIBE);
     set_qos(&(subscribe.fixed_header), 1);
-    
-    size_t id_length = sizeof(id); 
+
+    size_t id_length = sizeof(id);
 
     subscribe.variable_header = malloc(id_length);
-    
-    memcpy(subscribe.variable_header, &id, id_length);
 
+    memcpy(subscribe.variable_header, &id, id_length);
 
     uint8_t *topic_encoded = utf8_encode(topic);
 
@@ -127,7 +141,6 @@ Packet create_subscribe_message(const char *topic)
     memcpy(subscribe.payload, topic_encoded, topic_length + 1);
 
     return subscribe;
-
 }
 
 void set_qos(uint8_t *fixed_header, int qos)
@@ -156,6 +169,7 @@ void set_type(u_int8_t *fixed_header, u_int8_t type)
     *fixed_header |= (type << 4) & (0b1111 << 4);
 }
 
-uint8_t get_qos(uint8_t *fixed_header) {
-    return (*fixed_header >> 1) & 0b11; 
+uint8_t get_qos(uint8_t *fixed_header)
+{
+    return (*fixed_header >> 1) & 0b11;
 }

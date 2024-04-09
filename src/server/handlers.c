@@ -3,13 +3,15 @@
 bool client_handler(int client_socket, Packet client_packet)
 {
 
-    if (client_packet.fixed_header == 0) {
+    if (client_packet.fixed_header == 0)
+    {
         fprintf(stderr, "Error al decodificar el mensaje del cliente\n");
         close(client_socket);
         return false;
     }
 
-    if (get_type(&(client_packet.fixed_header)) != CONNECT) {
+    if (get_type(&(client_packet.fixed_header)) != CONNECT)
+    {
         printf("Mensaje recibido no es del tipo CONNECT\n");
 
         Packet connack_error = create_connack_message(CONNACK_REFUSED_NOT_AUTHORIZED);
@@ -32,7 +34,8 @@ void publish_handler(Packet packet, TopicNode *root, const char *topic, const ch
     int numsubs = 0;
     int **subs = getSubscribers(node, &numsubs);
     printf("hodho");
-    for(int i = 0 ; i < numsubs ; i++){
+    for (int i = 0; i < numsubs; i++)
+    {
 
         printf("BUENOSD AIS%d\n", subs[i]);
         write(subs[i], message, strlen(message));
@@ -41,10 +44,11 @@ void publish_handler(Packet packet, TopicNode *root, const char *topic, const ch
     printTree(root, 0);
 }
 
-void subscribe_handler(Packet packet, TopicNode *root, const char *topic, int client_socket){
+void subscribe_handler(Packet packet, TopicNode *root, const char *topic, int client_socket)
+{
     printf("%d\n", client_socket);
     char *topics[] = {topic};
     int num_topics = sizeof(topics) / sizeof(topics[0]);
     subscribeToTopics(root, topics, num_topics, client_socket);
-    TopicNode * node = getChildNode(root, topic);
+    TopicNode *node = getChildNode(root, topic);
 }

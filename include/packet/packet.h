@@ -18,7 +18,8 @@ typedef struct
     u_int8_t *payload;
 } Packet;
 
-typedef struct {
+typedef struct
+{
     const char *topic_name;
     uint8_t qos;
 } TopicQoS;
@@ -28,6 +29,7 @@ Packet create_publish_message(const char *, const char *);
 Packet create_subscribe_message();
 Packet create_connack_message(uint8_t);
 Packet create_subscribe_message(const char *);
+Packet create_disconnect_message();
 
 void set_remaining_length(uint8_t *, size_t);
 void set_clean_session_flag(uint8_t *);
