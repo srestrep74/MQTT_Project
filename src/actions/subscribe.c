@@ -5,11 +5,9 @@ void subscribeToTopics(TopicNode *root, const char **topics, int numTopics, cons
 {
     if (root == NULL || topics == NULL)
         return;
-
     for (int i = 0; i < numTopics; ++i)
     {
         const char *topic = topics[i];
-
         if (strstr(topic, "#") != NULL)
         {
             subscribeToChildrenBeforeWildcard(root, topic, subscriber);
