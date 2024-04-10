@@ -1,5 +1,6 @@
 #include "../../include/client/utils.h"
 
+// Function to generate a random client ID
 char *generate_client_id()
 {
     static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -39,6 +40,7 @@ char *generate_client_id()
     return client_id;
 }
 
+// Function to display the menu
 void display_menu() {
     printf("\n");
     printf("===========================================\n");
@@ -50,4 +52,3 @@ void display_menu() {
     printf("===========================================\n");
     printf("Enter the number corresponding to your choice: ");
 }
-

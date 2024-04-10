@@ -6,10 +6,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-// Function to subscribe to multiple topics
+//  Function definitions
 void subscribeToTopics(TopicNode *, const char **, int, const int);
-
-// Function to subscribe to children
 void subscribeToWildcardPlus(TopicNode *, const char *, const int);
 void subscribeToChildrenBeforeWildcard(TopicNode *, const char *, const int); 
 void subscribeToChildren(TopicNode *, const int);

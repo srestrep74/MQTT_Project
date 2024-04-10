@@ -4,17 +4,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Definición de la estructura del nodo del árbol
+// Struct definitions
 typedef struct TopicNode
 {
     char *name;
     char *last_message;
-    int **subscribers; // Lista de suscriptores
+    int **subscribers;
     int num_subscribers;
     struct TopicNode *children;
     struct TopicNode *next_sibling;
 } TopicNode;
 
+// Function definitions
 TopicNode *createTopicNode(const char *);
 TopicNode *getChildNode(TopicNode *, const char *);
 TopicNode *getChildNodeHelper(TopicNode *, const char *);

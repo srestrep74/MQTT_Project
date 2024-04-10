@@ -54,12 +54,10 @@ TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
         child = child->next_sibling;
     }
 
-    // Crear un nuevo nodo hijo
     TopicNode *newChild = createTopicNode(name);
     if (newChild == NULL)
         return NULL;
 
-    // Suscribir a los suscriptores del padre al nuevo nodo hijo
     int numSubscribers = 0;
     int **subscribers = getSubscribers(parent, &numSubscribers);
     if (subscribers != NULL)
@@ -73,10 +71,8 @@ TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
             }
             newChild->num_subscribers = numSubscribers;
         }
-        // free(subscribers);
     }
 
-    // Agregar el nuevo nodo hijo a la lista de hijos del padre
     newChild->next_sibling = parent->children;
     parent->children = newChild;
 

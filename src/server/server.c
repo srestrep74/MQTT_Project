@@ -28,6 +28,7 @@ Tree *get_tree()
     return &tree;
 }
 
+// Function to send a packet over a socket
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
@@ -35,6 +36,7 @@ void send_packet(int client_socket, Packet packet)
     write(client_socket, buffer, total_size);
 }
 
+// Function to handle client requests
 void *handler(void *arg)
 {
     ClientInfo *client_info = (ClientInfo *)arg;
@@ -99,6 +101,7 @@ void *handler(void *arg)
     return NULL;
 }
 
+// Main function
 int main()
 {
     int server_socket, client_socket;

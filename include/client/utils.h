@@ -9,6 +9,7 @@
 
 #include "../packet/packet.h"
 
+// Function definitions
 char *generate_client_id();
 void display_menu();
 
