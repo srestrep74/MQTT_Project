@@ -74,6 +74,7 @@ void *handler(void *arg)
                     num_topics++;
                     topics = (char **)realloc(topics, num_topics * sizeof(char *));
                     topics[num_topics - 1] = topic;
+                    topic[topic_length] = '\0';
                 }
 
                 Tree *tree = get_tree();
