@@ -13,6 +13,7 @@
 
 #define MAX_CLIENTS 100
 
+// Function definitions
 Tree *get_tree()
 {
     static Tree tree;
@@ -27,6 +28,7 @@ Tree *get_tree()
     return &tree;
 }
 
+// Function to send a packet over a socket
 void send_packet(int client_socket, Packet packet)
 {
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
@@ -34,6 +36,7 @@ void send_packet(int client_socket, Packet packet)
     write(client_socket, buffer, total_size);
 }
 
+// Function to handle client requests
 void *handler(void *arg)
 {
     ClientInfo *client_info = (ClientInfo *)arg;
@@ -41,13 +44,13 @@ void *handler(void *arg)
     int client_id = client_info->client_id;
 
     printf("Handling client %d\n", client_id);
+
     Packet packet = decode_message_server(client_socket);
 
     if (client_handler(client_socket, packet))
     {
         while (1)
         {
-            // printf("Entre\n");
             packet = decode_message_server(client_socket);
             if (get_type(&packet.fixed_header) == PUBLISH)
             {
@@ -65,36 +68,23 @@ void *handler(void *arg)
                 int num_topics = 0;
                 while (offset < packet.remaining_length)
                 {
-                    // Obtener la longitud del tópico
                     int topic_length = packet.payload[offset++];
-
-                    // Reservar memoria para el tópico y copiarlo
-                    char *topic = (char *)malloc(topic_length + 2); // +1 para el carácter nulo
+                    char *topic = (char *)malloc(topic_length + 1);
                     memcpy(topic, &packet.payload[offset], topic_length);
-                    // topic[topic_length] = '\0'; // Agregar el carácter nulo al final
-
-                    // Incrementar el desplazamiento
-                    offset += topic_length + 2;
+                    topic[topic_length] = '\0';
+                    offset += topic_length + 1;
                     num_topics++;
                     topics = (char **)realloc(topics, num_topics * sizeof(char *));
                     topics[num_topics - 1] = topic;
                     topic[topic_length] = '\0';
+
+                    printf("Topic server : %s\n", topics[num_topics - 1]);
                 }
 
-                for (int i = 0; i < num_topics - 1; i++)
-                {
-                    printf("Topic tree: %s\n", topics[i]);
-                }
                 Tree *tree = get_tree();
                 pthread_mutex_lock(&tree->mutex);
-                subscribe_handler(packet, tree->root, topics, client_socket);
+                subscribe_handler(packet, tree->root, topics, client_socket, num_topics - 1);
                 pthread_mutex_unlock(&tree->mutex);
-                /*char *topic = utf8_decode(packet.payload);
-
-                Tree *tree = get_tree();
-                pthread_mutex_lock(&tree->mutex);
-                subscribe_handler(packet, tree->root, topic, client_socket);
-                pthread_mutex_unlock(&tree->mutex);*/
             }
             else if (get_type(&packet.fixed_header) == UNSUBSCRIBE)
             {
@@ -144,6 +134,7 @@ void *handler(void *arg)
     return NULL;
 }
 
+// Main function
 int main()
 {
     int server_socket, client_socket;

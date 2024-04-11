@@ -1,8 +1,8 @@
 #include "../../include/server/handlers.h"
 
+// Function to handle client requests
 bool client_handler(int client_socket, Packet client_packet)
 {
-
     if (client_packet.fixed_header == 0)
     {
         fprintf(stderr, "Error al decodificar el mensaje del cliente\n");
@@ -26,28 +26,30 @@ bool client_handler(int client_socket, Packet client_packet)
     return true;
 }
 
+// Function to handle publishing messages
 void publish_handler(Packet packet, TopicNode *root, const char *topic, const char *message)
 {
-    printf("%s\n", topic);
+    printf("\033[1m This is the actual tree: \033[0m\n");
+
     TopicNode *node = getChildNode(root, topic);
+
     publishMessage(node, message);
+
     int numsubs = 0;
     int **subs = getSubscribers(node, &numsubs);
-    printf("hodho");
+
     for (int i = 0; i < numsubs; i++)
     {
-
-        printf("BUENOSD AIS%d\n", subs[i]);
         write(subs[i], message, strlen(message));
     }
+
     printTree(root, 0);
 }
 
-void subscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket)
+// Function to handle subscribing to topics
+void subscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket, int numTopics)
 {
-    // char *topics[] = {topic};
-    int num_topics = sizeof(topics) / sizeof(topics[0]);
-    subscribeToTopics(root, topics, num_topics, client_socket);
+    subscribeToTopics(root, topics, numTopics, client_socket);
 }
 
 void unsubscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket, int num_topics)

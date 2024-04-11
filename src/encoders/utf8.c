@@ -1,5 +1,6 @@
 #include "../../include/encoders/utf8.h"
 
+// Function to encode a UTF-8 string
 uint8_t *utf8_encode(const char *input)
 {
     size_t len = strlen(input);
@@ -20,9 +21,9 @@ uint8_t *utf8_encode(const char *input)
     return output;
 }
 
+// Function to decode a UTF-8 string
 char *utf8_decode(const uint8_t *input)
 {
-
     size_t len = (input[0] << 8) | input[1];
 
     char *output = (char *)malloc(len + 1);
@@ -34,5 +35,6 @@ char *utf8_decode(const uint8_t *input)
 
     memcpy(output, input + 2, len + 1);
     output[len] = '\0';
+
     return output;
 }

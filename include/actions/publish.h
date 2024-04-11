@@ -3,6 +3,7 @@
 
 #include "../server/topic_tree/topic_tree.h"
 
+// Function definitions
 void publishMessage(TopicNode *, const char *);
 
 #endif

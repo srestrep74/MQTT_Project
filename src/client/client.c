@@ -6,13 +6,27 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <pthread.h>
 
 #include "../../include/packet/packet.h"
 #include "../../include/client_constants.h"
 #include "../../include/encoders/client_encoders.h"
+#include "../../include/log/log.h"
 
-// Function to encode a message into a buffer
+char *get_socket_ip(int sock)
+{
+    struct sockaddr_in local_address;
+    socklen_t address_length = sizeof(local_address);
+    if (getsockname(sock, (struct sockaddr *)&local_address, &address_length) == -1)
+    {
+        perror("getsockname");
+        exit(EXIT_FAILURE);
+    }
+
+    char *ip = inet_ntoa(local_address.sin_addr);
+    return ip;
+}
 
 // Function to send a packet over a socket
 void send_packet(int client_socket, Packet packet)
@@ -22,12 +36,11 @@ void send_packet(int client_socket, Packet packet)
     write(client_socket, buffer, total_size);
 }
 
+// Function to create a socket
 int create_socket()
 {
     return socket(AF_INET, SOCK_STREAM, 0);
 }
-
-// Function to decode a message received from a socket
 
 // Function to receive messages from the server
 void *receive_messages(void *arg)
@@ -66,37 +79,18 @@ void *receive_messages(void *arg)
     pthread_exit(NULL);
 }
 
-Packet create_sub(char **topics, int num_topics)
+// Main function
+int main(int argc, char **argv)
 {
-    Packet sub;
-    printf("%d\n", num_topics);
-    set_type(&sub.fixed_header, SUBSCRIBE);
 
-    int payload_size = 0;
-    for (int i = 0; i < num_topics; i++)
+    if (argc != 2)
     {
-        payload_size += strlen(topics[i]) + 2;
+        fprintf(stderr, "Usage: %s <log_filename>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
-    sub.payload = (unsigned char *)malloc(payload_size);
-    int offset = 0;
-    for (int i = 0; i < num_topics; i++)
-    {
-        int topic_length = strlen(topics[i]);
-        sub.payload[offset++] = (unsigned char)topic_length;
-        memcpy(&sub.payload[offset], topics[i], topic_length);
-        sub.payload[offset + topic_length] = 0x00;
-        offset += topic_length + 1;
-    }
+    char *log_file = argv[1];
 
-    sub.payload[payload_size - 1] = 0x00;
-    sub.remaining_length = 2 + payload_size;
-
-    return sub;
-}
-
-int main()
-{
     int client_socket;
     struct sockaddr_in server_addr;
 
@@ -120,7 +114,9 @@ int main()
     else
     {
         printf("Connected to the server...\n");
-        printf("Connected to the server...%d\n", client_socket);
+
+        char *client_ip = get_socket_ip(client_socket);
+        char *server_ip = SERVER_IP;
 
         Packet connect = create_connect_message();
         send_packet(client_socket, connect);
@@ -180,8 +176,9 @@ int main()
                         topics[i] = strdup(topicc);
                     }
 
-                    Packet sub = create_sub(topics, num_topics);
+                    Packet sub = create_subscribe_message(topics, num_topics);
                     send_packet(client_socket, sub);
+                    log_activity(log_file, client_ip, "SUBSCRIBE", server_ip);
 
                     break;
                 case 2:
@@ -194,11 +191,14 @@ int main()
                     fgets(message, sizeof(message), stdin);
                     Packet pub = create_publish_message(topic, message);
                     send_packet(client_socket, pub);
+
+                    log_activity(log_file, client_ip, "PUBLISH", server_ip);
                     break;
                 case 3:
                     printf("\nYou have selected: \x1b[31mDisconnect :( Bye bye!!!\x1b[0m\n ");
                     Packet disconnect = create_disconnect_message();
                     send_packet(client_socket, disconnect);
+                    log_activity(log_file, client_ip, "DISCONNECT", server_ip);
                     close(client_socket);
                     return 0;
                     break;
@@ -234,6 +234,7 @@ int main()
                     printf("num_topics client : %d\n", num_topicss);
                     Packet unsub = create_unsubscribe_message(topicss, num_topicss);
                     send_packet(client_socket, unsub);
+                    log_activity(log_file, client_ip, "UNSUBSCRIBE", server_ip);
 
                     break;
 

@@ -1,5 +1,6 @@
 #include "../../include/encoders/client_encoders.h"
 
+// Function to encode a message for the client
 unsigned char *encode_message_client(Packet packet, size_t total_size)
 {
     unsigned char *buffer = malloc(total_size);
@@ -22,9 +23,11 @@ unsigned char *encode_message_client(Packet packet, size_t total_size)
         memcpy(buffer + offset, packet.payload, packet.remaining_length);
         offset += sizeof(packet.payload);
     }
+
     return buffer;
 }
 
+// Function to decode a message from the client
 Packet decode_message_client(int client_socket)
 {
     Packet packet = {0};

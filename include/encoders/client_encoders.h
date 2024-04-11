@@ -9,6 +9,7 @@
 
 #include "../packet/packet.h"
 
+// Function definitions
 unsigned char *encode_message_client(Packet packet, size_t total_size);
 Packet decode_message_client(int client_socket);
 

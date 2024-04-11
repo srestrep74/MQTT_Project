@@ -1,11 +1,13 @@
 #include "../../../include/server/topic_tree/topic_tree.h"
 
-// Función para crear un nuevo nodo del árbol de tópicos
+// Function to create a new topic node
 TopicNode *createTopicNode(const char *name)
 {
+   
     TopicNode *newNode = (TopicNode *)malloc(sizeof(TopicNode));
     if (newNode != NULL)
     {
+        
         newNode->name = strdup(name);
         newNode->last_message = NULL;
         newNode->subscribers = NULL;
@@ -16,33 +18,32 @@ TopicNode *createTopicNode(const char *name)
     return newNode;
 }
 
-// Función para buscar o crear un nodo hijo en el árbol de tópicos
+// Function to get the child node of a parent node based on the topic
 TopicNode *getChildNode(TopicNode *parent, const char *topic)
 {
     if (parent == NULL || topic == NULL)
         return NULL;
 
-    // Creamos una copia del tópico para no modificar el original
     char *topicCopy = strdup(topic);
     if (topicCopy == NULL)
         return NULL;
 
-    // Dividimos el tópico en partes
     char *token = strtok(topicCopy, "/");
     TopicNode *currentNode = parent;
     while (token != NULL)
     {
-        // Buscamos o creamos el nodo hijo correspondiente
         currentNode = getChildNodeHelper(currentNode, token);
         if (currentNode == NULL)
             break;
         token = strtok(NULL, "/");
     }
 
+
     free(topicCopy);
     return currentNode;
 }
 
+// Helper function to get the child node of a parent node based on the name
 TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
 {
     TopicNode *child = parent->children;
@@ -53,12 +54,10 @@ TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
         child = child->next_sibling;
     }
 
-    // Crear un nuevo nodo hijo
     TopicNode *newChild = createTopicNode(name);
     if (newChild == NULL)
         return NULL;
 
-    // Suscribir a los suscriptores del padre al nuevo nodo hijo
     int numSubscribers = 0;
     int **subscribers = getSubscribers(parent, &numSubscribers);
     if (subscribers != NULL)
@@ -72,16 +71,15 @@ TopicNode *getChildNodeHelper(TopicNode *parent, const char *name)
             }
             newChild->num_subscribers = numSubscribers;
         }
-        // free(subscribers);
     }
 
-    // Agregar el nuevo nodo hijo a la lista de hijos del padre
     newChild->next_sibling = parent->children;
     parent->children = newChild;
 
     return newChild;
 }
 
+// Function to get the subscribers of a topic node
 int **getSubscribers(TopicNode *node, int *numSubscribers)
 {
     if (node == NULL || numSubscribers == NULL)
@@ -91,6 +89,7 @@ int **getSubscribers(TopicNode *node, int *numSubscribers)
     return node->subscribers;
 }
 
+// Function to get the children of a topic node
 TopicNode *getChildren(TopicNode *node)
 {
     if (node == NULL)
@@ -99,39 +98,36 @@ TopicNode *getChildren(TopicNode *node)
     return node->children;
 }
 
+// Function to print the topic tree
 void printTree(TopicNode *node, int depth)
 {
+    
     if (node == NULL)
         return;
 
-    // Imprimir el nombre del nodo con su nivel de profundidad
     for (int i = 0; i < depth; i++)
     {
         printf("  ");
     }
-    printf("- %s\n", node->name);
+    printf("|- %s\n", node->name);
 
-    // Recursivamente imprimir los hijos del nodo
     printTree(node->children, depth + 1);
-
-    // Imprimir los hermanos del nodo
     printTree(node->next_sibling, depth);
+    printf("\n");
 }
 
-// Función para liberar la memoria utilizada por el árbol de tópicos
+// Function to free the memory allocated for the topic tree
 void freeTopicTree(TopicNode *root)
 {
     if (root == NULL)
         return;
 
-    // Liberar memoria de los suscriptores
     for (int i = 0; i < root->num_subscribers; i++)
     {
         free(root->subscribers[i]);
     }
     free(root->subscribers);
 
-    // Liberar memoria de los hijos
     TopicNode *child = root->children;
     while (child != NULL)
     {
@@ -140,8 +136,8 @@ void freeTopicTree(TopicNode *root)
         child = next;
     }
 
-    // Liberar memoria del nodo actual
     free(root->name);
     free(root->last_message);
+
     free(root);
 }
