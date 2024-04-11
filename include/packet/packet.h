@@ -31,6 +31,7 @@ Packet create_publish_message(const char *, const char *);
 Packet create_connack_message(uint8_t);
 Packet create_disconnect_message();
 Packet create_subscribe_message(char **, int);
+Packet create_unsubscribe_message(char **, int);
 
 // Packet helper function definitions
 void set_remaining_length(uint8_t *, size_t);

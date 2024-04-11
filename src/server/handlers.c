@@ -51,3 +51,9 @@ void subscribe_handler(Packet packet, TopicNode *root, const char **topics, int 
 {
     subscribeToTopics(root, topics, numTopics, client_socket);
 }
+
+// Function to handle unsubscribing from topics
+void unsubscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket, int num_topics)
+{
+    unsubscribeToTopics(root, topics, num_topics, client_socket);
+}

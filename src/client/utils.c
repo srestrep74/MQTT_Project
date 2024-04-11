@@ -49,6 +49,7 @@ void display_menu() {
     printf("1. Subscriber\n");
     printf("2. Publisher\n");
     printf("3. Disconnect\n");
+    printf("4. Unsubscribe\n");
     printf("===========================================\n");
     printf("Enter the number corresponding to your choice: ");
 }

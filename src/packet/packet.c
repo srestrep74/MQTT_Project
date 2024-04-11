@@ -154,6 +154,36 @@ Packet create_subscribe_message(char **topics, int num_topics)
     return sub;
 }
 
+Packet create_unsubscribe_message(char **topics, int num_topics)
+{
+    Packet unsub;
+    printf("%d\n", num_topics);
+    set_type(&unsub.fixed_header, UNSUBSCRIBE);
+
+    int payload_size = 0;
+    for (int i = 0; i < num_topics; i++)
+    {
+        payload_size += strlen(topics[i]) + 2;
+    }
+
+    unsub.payload = (unsigned char *)malloc(payload_size);
+    int offset = 0;
+    for (int i = 0; i < num_topics; i++)
+    {
+        printf("Topic unsub : %s\n", topics[i]);
+        int topic_length = strlen(topics[i]);
+        unsub.payload[offset++] = (unsigned char)topic_length;
+        memcpy(&unsub.payload[offset], topics[i], topic_length);
+        unsub.payload[offset + topic_length] = 0x00;
+        offset += topic_length + 1;
+    }
+
+    unsub.payload[payload_size - 1] = 0x00;
+    unsub.remaining_length = 2 + payload_size;
+
+    return unsub;
+}
+
 // Function to set the QoS in the fixed header
 void set_qos(uint8_t *fixed_header, int qos)
 {
