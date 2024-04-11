@@ -202,6 +202,37 @@ int main()
                     close(client_socket);
                     return 0;
                     break;
+                case 4:
+                    printf("\nYou have selected: \x1b[32mUnSubscribe\x1b[0m\n");
+
+                    int num_topicss;
+                    printf("Enter the number of topics : ");
+                    if (scanf("%d", &num_topicss) != 1 || num_topicss <= 0)
+                    {
+                        printf("Invalid number of topics. \n");
+                        return 1;
+                    }
+                    const char **topicss = (const char **)malloc(num_topicss * sizeof(const char *));
+                    printf("Enter the topics : \n");
+
+                    char topiccc[100];
+                    for (int i = 0; i < num_topicss; i++)
+                    {
+                        printf("Topic %d: ", i + 1);
+                        if (scanf("%s", topiccc) != 1)
+                        {
+                            printf("Error receiving the topic. \n");
+                            free(topicss);
+                            return 1;
+                        }
+                        topicss[i] = strdup(topiccc);
+                    }
+                    printf("num_topics client : %d\n", num_topicss);
+                    Packet unsub = create_unsubscribe_message(topicss, num_topicss);
+                    send_packet(client_socket, unsub);
+
+                    break;
+
                 default:
                     printf("\nInvalid option. Please select \x1b[33m1\x1b[0m, \x1b[33m2\x1b[0m, or \x1b[33m3\x1b[0m.\n");
                     break;

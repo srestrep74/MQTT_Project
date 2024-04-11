@@ -29,6 +29,7 @@ Packet create_publish_message(const char *, const char *);
 Packet create_subscribe_message();
 Packet create_connack_message(uint8_t);
 Packet create_subscribe_message(const char *);
+Packet create_unsubscribe_message(char **, int);
 Packet create_disconnect_message();
 
 void set_remaining_length(uint8_t *, size_t);

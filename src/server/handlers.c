@@ -49,3 +49,8 @@ void subscribe_handler(Packet packet, TopicNode *root, const char **topics, int 
     int num_topics = sizeof(topics) / sizeof(topics[0]);
     subscribeToTopics(root, topics, num_topics, client_socket);
 }
+
+void unsubscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket, int num_topics)
+{
+    unsubscribeToTopics(root, topics, num_topics, client_socket);
+}

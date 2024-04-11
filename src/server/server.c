@@ -96,6 +96,38 @@ void *handler(void *arg)
                 subscribe_handler(packet, tree->root, topic, client_socket);
                 pthread_mutex_unlock(&tree->mutex);*/
             }
+            else if (get_type(&packet.fixed_header) == UNSUBSCRIBE)
+            {
+                int offset = 0;
+                char **topicss = NULL;
+                int num_topicss = 0;
+                while (offset < packet.remaining_length)
+                {
+                    // Obtener la longitud del tópico
+                    int topic_length = packet.payload[offset++];
+
+                    // Reservar memoria para el tópico y copiarlo
+                    char *topic = (char *)malloc(topic_length + 2); // +1 para el carácter nulo
+                    memcpy(topic, &packet.payload[offset], topic_length);
+                    // topic[topic_length] = '\0'; // Agregar el carácter nulo al final
+
+                    // Incrementar el desplazamiento
+                    offset += topic_length + 2;
+                    num_topicss++;
+                    topicss = (char **)realloc(topicss, num_topicss * sizeof(char *));
+                    topicss[num_topicss - 1] = topic;
+                    topic[topic_length] = '\0';
+                }
+                printf("num_topics server : %d\n", num_topicss);
+                for (int i = 0; i < num_topicss; i++)
+                {
+                    printf("Topic unsub server : %s\n", topicss[i]);
+                }
+                Tree *tree = get_tree();
+                pthread_mutex_lock(&tree->mutex);
+                unsubscribe_handler(packet, tree->root, topicss, client_socket, num_topicss - 1);
+                pthread_mutex_unlock(&tree->mutex);
+            }
             else if (get_type(&packet.fixed_header) == DISCONNECT)
             {
                 close(client_socket);

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "string.h": "c",
-        "server.h": "c"
+        "server.h": "c",
+        "client_constants.h": "c"
     }
 }
