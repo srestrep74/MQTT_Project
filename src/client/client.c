@@ -227,6 +227,10 @@ int main()
                         }
                         topicss[i] = strdup(topiccc);
                     }
+                    for (int i = 0; i < num_topicss; i++)
+                    {
+                        printf("Topic unsub client : %s\n", topicss[i]);
+                    }
                     printf("num_topics client : %d\n", num_topicss);
                     Packet unsub = create_unsubscribe_message(topicss, num_topicss);
                     send_packet(client_socket, unsub);

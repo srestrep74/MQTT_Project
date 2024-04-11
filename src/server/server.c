@@ -112,7 +112,7 @@ void *handler(void *arg)
                     // topic[topic_length] = '\0'; // Agregar el carácter nulo al final
 
                     // Incrementar el desplazamiento
-                    offset += topic_length + 2;
+                    offset += topic_length + 1;
                     num_topicss++;
                     topicss = (char **)realloc(topicss, num_topicss * sizeof(char *));
                     topicss[num_topicss - 1] = topic;
