@@ -9,7 +9,6 @@ void unsubscribeToTopics(TopicNode *root, char **topics, int num_topics, int cli
         printf("function node unsub : %s\n", node->name);
         if (node != NULL)
         {
-            // Buscar el cliente en la lista de suscriptores del nodo
             int **subscribers = node->subscribers;
             int num_subscribers = node->num_subscribers;
             printf("functio num subs : %d\n", num_subscribers);
@@ -17,8 +16,7 @@ void unsubscribeToTopics(TopicNode *root, char **topics, int num_topics, int cli
             {
                 if (subscribers[j] == client_id)
                 {
-                    printf("Entra\n");
-                    // Eliminar el cliente de la lista de suscriptores
+                    
                     for (int k = j; k < num_subscribers - 1; k++)
                     {
                         subscribers[k] = subscribers[k + 1];

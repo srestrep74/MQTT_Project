@@ -7,17 +7,19 @@ char *generate_client_id()
 
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    
+
     pid_t pid = getpid();
 
     unsigned int seed = (unsigned int)(tv.tv_sec * 1000000 + tv.tv_usec + pid);
-    
+
     srand(seed);
 
     char *client_id = NULL;
     int length = 0;
-    do {
-        if (client_id != NULL) {
+    do
+    {
+        if (client_id != NULL)
+        {
             free(client_id);
         }
 
@@ -41,13 +43,14 @@ char *generate_client_id()
 }
 
 // Function to display the menu
-void display_menu() {
+void display_menu()
+{
     printf("\n");
     printf("===========================================\n");
     printf("                  Menu                     \n");
     printf("===========================================\n");
-    printf("1. Subscriber\n");
-    printf("2. Publisher\n");
+    printf("1. Subscribe\n");
+    printf("2. Publishe\n");
     printf("3. Disconnect\n");
     printf("4. Unsubscribe\n");
     printf("===========================================\n");

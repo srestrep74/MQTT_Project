@@ -94,6 +94,9 @@ void log_transaction(const char *log_file, const char *client_ip, const char *qu
 
 int main()
 {
+    const char *topics[] = {"hola/wet", "hola/wet/hot", "hola/vida"};
+    int num_topics = sizeof(topics) / sizeof(topics[0]);
+    Packet unsub = create_unsubscribe_message(topics, num_topics);
 
     /*if (argc != 2)
     {
@@ -112,7 +115,7 @@ int main()
     log_transaction(log_file, client_ip, query, response_ip);*/
 
     // Ejemplo de uso
-    TopicNode *root = createTopicNode("/");
+    /*TopicNode *root = createTopicNode("/");
 
     const char *topic = "sensors";
     TopicNode *node1 = getChildNode(root, topic);
@@ -154,7 +157,7 @@ int main()
         {
             printf("- %d\n", subscriberss[i]);
         }
-    }
+    }*/
 
     // Liberar memoria utilizada por el árbol de tópicos
     // freeTopicTree(root);

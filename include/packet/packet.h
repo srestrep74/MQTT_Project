@@ -10,7 +10,6 @@
 #include "../client/utils.h"
 #include "../actions/subscribe.h"
 
-// Struct definitions
 typedef struct
 {
     u_int8_t fixed_header;
@@ -25,15 +24,12 @@ typedef struct
     uint8_t qos;
 } TopicQoS;
 
-// Packet function definitions
 Packet create_connect_message();
 Packet create_publish_message(const char *, const char *);
+Packet create_subscribe_message(char **topics, int num_topics);
 Packet create_connack_message(uint8_t);
 Packet create_disconnect_message();
-Packet create_subscribe_message(char **, int);
-Packet create_unsubscribe_message(char **, int);
 
-// Packet helper function definitions
 void set_remaining_length(uint8_t *, size_t);
 void set_clean_session_flag(uint8_t *);
 uint8_t get_type(uint8_t *fixed_header);
