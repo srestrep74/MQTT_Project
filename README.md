@@ -66,6 +66,7 @@ The development focused on implementing Quality of Service (QoS) level 0, which 
 - Complete implementation of all QoS levels, specifically into the subscribe Packet.
 - Use the mqtt utf-8 encoders and decoders into the strings in the payload and fixed header of the subscribe and publish Packet.
 - Ack responses for the subscribe Packet.
+- The data of the client is not deleted when a client disconnects from the server.
 
 ## How to execute the protocol
 ### Compile server
