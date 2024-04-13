@@ -5,14 +5,14 @@ bool client_handler(int client_socket, Packet client_packet)
 {
     if (client_packet.fixed_header == 0)
     {
-        fprintf(stderr, "Error al decodificar el mensaje del cliente\n");
+        fprintf(stderr, "Error decoding the client\n");
         close(client_socket);
         return false;
     }
 
     if (get_type(&(client_packet.fixed_header)) != CONNECT)
     {
-        printf("Mensaje recibido no es del tipo CONNECT\n");
+        printf("Message is not CONNECT type\n");
 
         Packet connack_error = create_connack_message(CONNACK_REFUSED_NOT_AUTHORIZED);
         send_packet(client_socket, connack_error);
@@ -34,7 +34,6 @@ void publish_handler(Packet packet, TopicNode *root, const char *topic, const ch
     TopicNode *node = getChildNode(root, topic);
 
     publishMessage(node, message);
-
     int numsubs = 0;
     int **subs = getSubscribers(node, &numsubs);
 
@@ -52,6 +51,7 @@ void subscribe_handler(Packet packet, TopicNode *root, const char **topics, int 
     subscribeToTopics(root, topics, numTopics, client_socket);
 }
 
+// Function to handle unsubscribing from topics
 void unsubscribe_handler(Packet packet, TopicNode *root, const char **topics, int client_socket, int num_topics)
 {
     unsubscribeToTopics(root, topics, num_topics, client_socket);

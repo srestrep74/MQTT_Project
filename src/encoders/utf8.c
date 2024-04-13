@@ -9,7 +9,7 @@ uint8_t *utf8_encode(const char *input)
 
     if (output == NULL)
     {
-        fprintf(stderr, "Error: No se pudo asignar memoria\n");
+        fprintf(stderr, "Error: Can not assign memory\n");
         return NULL;
     }
 
@@ -29,7 +29,7 @@ char *utf8_decode(const uint8_t *input)
     char *output = (char *)malloc(len + 1);
     if (output == NULL)
     {
-        fprintf(stderr, "Error: No se pudo asignar memoria\n");
+        fprintf(stderr, "Error: Can not assign memory\n");
         return NULL;
     }
 

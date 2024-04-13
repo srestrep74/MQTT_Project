@@ -34,6 +34,7 @@ void send_packet(int client_socket, Packet packet)
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length + (packet.remaining_length - sizeof(packet.variable_header));
     unsigned char *buffer = encode_message_client(packet, total_size);
     write(client_socket, buffer, total_size);
+    free(buffer);
 }
 
 // Function to create a socket
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
             int choice;
 
             pthread_t thread_id;
+            SocketInfo socket_info = {client_socket, server_ip, client_ip, log_file};
             if (pthread_create(&thread_id, NULL, receive_messages, &client_socket) != 0)
             {
                 perror("pthread_create");
@@ -227,11 +229,6 @@ int main(int argc, char **argv)
                         }
                         topicss[i] = strdup(topiccc);
                     }
-                    for (int i = 0; i < num_topicss; i++)
-                    {
-                        printf("Topic unsub client : %s\n", topicss[i]);
-                    }
-                    printf("num_topics client : %d\n", num_topicss);
                     Packet unsub = create_unsubscribe_message(topicss, num_topicss);
                     send_packet(client_socket, unsub);
                     log_activity(log_file, client_ip, "UNSUBSCRIBE", server_ip);

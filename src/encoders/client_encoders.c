@@ -25,13 +25,14 @@ unsigned char *encode_message_client(Packet packet, size_t total_size)
     }
 
     return buffer;
+    
 }
 
 // Function to decode a message from the client
 Packet decode_message_client(int client_socket)
 {
     Packet packet = {0};
-    unsigned char buffer[1000];
+    unsigned char buffer[10000];
 
     ssize_t data = read(client_socket, buffer, sizeof(buffer));
 

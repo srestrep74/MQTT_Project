@@ -9,6 +9,15 @@
 
 #include "../packet/packet.h"
 
+// Structure definitions
+typedef struct
+{
+    int client_socket;
+    char *server_ip;
+    char *client_ip;
+    char *log_name;
+} SocketInfo;
+
 // Function definitions
 char *generate_client_id();
 void display_menu();

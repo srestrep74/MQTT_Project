@@ -128,7 +128,6 @@ Packet create_disconnect_message()
 Packet create_subscribe_message(char **topics, int num_topics)
 {
     Packet sub;
-    printf("%d\n", num_topics);
     set_type(&sub.fixed_header, SUBSCRIBE);
 
     int payload_size = 0;
@@ -157,7 +156,6 @@ Packet create_subscribe_message(char **topics, int num_topics)
 Packet create_unsubscribe_message(char **topics, int num_topics)
 {
     Packet unsub;
-    printf("%d\n", num_topics);
     set_type(&unsub.fixed_header, UNSUBSCRIBE);
 
     int payload_size = 0;
@@ -170,7 +168,6 @@ Packet create_unsubscribe_message(char **topics, int num_topics)
     int offset = 0;
     for (int i = 0; i < num_topics; i++)
     {
-        printf("Topic unsub : %s\n", topics[i]);
         int topic_length = strlen(topics[i]);
         unsub.payload[offset++] = (unsigned char)topic_length;
         memcpy(&unsub.payload[offset], topics[i], topic_length);

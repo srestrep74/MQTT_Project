@@ -21,11 +21,14 @@ typedef struct
 {
     int client_socket;
     int client_id;
-} ClientInfo;
+    struct sockaddr_in client_addr;
+    char *log_file;
+    char *server_ip;
+} ThreadInfo;
 
 // Function definitions
 Tree *get_tree();
 Packet decode_message(int);
-void send_packet(int client_socket, Packet packet);
+void send_packet(int, Packet);
 
 #endif

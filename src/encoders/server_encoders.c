@@ -31,7 +31,7 @@ unsigned char *encode_message_server(Packet packet, size_t total_size)
 Packet decode_message_server(int client_socket)
 {
     Packet packet = {0};
-    unsigned char buffer[1000];
+    unsigned char buffer[10000];
 
     ssize_t data = read(client_socket, buffer, sizeof(buffer));
 

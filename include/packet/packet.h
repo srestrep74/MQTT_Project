@@ -36,7 +36,7 @@ Packet create_disconnect_message();
 // Packet helper function definitions
 void set_remaining_length(uint8_t *, size_t);
 void set_clean_session_flag(uint8_t *);
-uint8_t get_type(uint8_t *fixed_header);
+uint8_t get_type(uint8_t *);
 char *get_topic(Packet *);
 void set_type(u_int8_t *, u_int8_t);
 void set_qos(uint8_t *, int);

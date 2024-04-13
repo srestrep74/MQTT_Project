@@ -6,7 +6,6 @@
 
 #include "../../include/server/server.h"
 #include "../../include/packet/packet.h"
-#include "../../include/server_constants.h"
 #include "../../include/actions/publish.h"
 #include "../../include/server/handlers.h"
 #include "../../include/encoders/server_encoders.h"
@@ -34,14 +33,19 @@ void send_packet(int client_socket, Packet packet)
     size_t total_size = sizeof(packet.fixed_header) + sizeof(packet.remaining_length) + sizeof(packet.payload) + packet.remaining_length;
     unsigned char *buffer = encode_message_server(packet, total_size);
     write(client_socket, buffer, total_size);
+    free(buffer);
 }
 
 // Function to handle client requests
 void *handler(void *arg)
 {
-    ClientInfo *client_info = (ClientInfo *)arg;
-    int client_socket = client_info->client_socket;
-    int client_id = client_info->client_id;
+    ThreadInfo *thread_info = (ThreadInfo *)arg;
+    int client_socket = thread_info->client_socket;
+    int client_id = thread_info->client_id;
+    struct sockaddr_in client_addr = thread_info->client_addr;
+    char *client_ip = inet_ntoa(client_addr.sin_addr);
+    char *log_file = thread_info->log_file;
+    char *server_ip = thread_info->server_ip;
 
     printf("Handling client %d\n", client_id);
 
@@ -52,6 +56,7 @@ void *handler(void *arg)
         while (1)
         {
             packet = decode_message_server(client_socket);
+
             if (get_type(&packet.fixed_header) == PUBLISH)
             {
                 const char *message = utf8_decode(packet.payload);
@@ -60,6 +65,7 @@ void *handler(void *arg)
                 pthread_mutex_lock(&tree->mutex);
                 publish_handler(packet, tree->root, topic, message);
                 pthread_mutex_unlock(&tree->mutex);
+                log_activity(log_file, client_ip, "PUBLISH", server_ip);
             }
             else if (get_type(&packet.fixed_header) == SUBSCRIBE)
             {
@@ -78,13 +84,13 @@ void *handler(void *arg)
                     topics[num_topics - 1] = topic;
                     topic[topic_length] = '\0';
 
-                    printf("Topic server : %s\n", topics[num_topics - 1]);
                 }
 
                 Tree *tree = get_tree();
                 pthread_mutex_lock(&tree->mutex);
                 subscribe_handler(packet, tree->root, topics, client_socket, num_topics - 1);
                 pthread_mutex_unlock(&tree->mutex);
+                log_activity(log_file, client_ip, "SUBSCRIBE", server_ip);
             }
             else if (get_type(&packet.fixed_header) == UNSUBSCRIBE)
             {
@@ -93,33 +99,25 @@ void *handler(void *arg)
                 int num_topicss = 0;
                 while (offset < packet.remaining_length)
                 {
-                    // Obtener la longitud del tópico
                     int topic_length = packet.payload[offset++];
 
-                    // Reservar memoria para el tópico y copiarlo
-                    char *topic = (char *)malloc(topic_length + 2); // +1 para el carácter nulo
+                    char *topic = (char *)malloc(topic_length + 2); 
                     memcpy(topic, &packet.payload[offset], topic_length);
-                    // topic[topic_length] = '\0'; // Agregar el carácter nulo al final
-
-                    // Incrementar el desplazamiento
                     offset += topic_length + 1;
                     num_topicss++;
                     topicss = (char **)realloc(topicss, num_topicss * sizeof(char *));
                     topicss[num_topicss - 1] = topic;
                     topic[topic_length] = '\0';
                 }
-                printf("num_topics server : %d\n", num_topicss);
-                for (int i = 0; i < num_topicss; i++)
-                {
-                    printf("Topic unsub server : %s\n", topicss[i]);
-                }
                 Tree *tree = get_tree();
                 pthread_mutex_lock(&tree->mutex);
                 unsubscribe_handler(packet, tree->root, topicss, client_socket, num_topicss - 1);
                 pthread_mutex_unlock(&tree->mutex);
+                log_activity(log_file, client_ip, "UNSUBSCRIBE", server_ip);
             }
             else if (get_type(&packet.fixed_header) == DISCONNECT)
             {
+                log_activity(log_file, client_ip, "DISCONNECT", server_ip);
                 close(client_socket);
                 break;
             }
@@ -135,8 +133,18 @@ void *handler(void *arg)
 }
 
 // Main function
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc != 4)
+    {
+        fprintf(stderr, "Usage: %s <log_filename>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+ 
+    char *ip = argv[1];
+    int port = atoi(argv[2]);
+    char *log_file = argv[3];
+
     int server_socket, client_socket;
     socklen_t client_len;
     struct sockaddr_in server_addr, client_addr;
@@ -150,8 +158,8 @@ int main()
 
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_addr.s_addr = inet_addr(ip);
+    server_addr.sin_port = htons(port);
 
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
     {
@@ -165,7 +173,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    printf("Server is running on %s:%d\n", SERVER_IP, SERVER_PORT);
+    printf("Server is running on %s:%d\n", ip, port);
 
     int client_id = 0;
 
@@ -183,8 +191,9 @@ int main()
         }
 
         printf("New connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        
         pthread_t thread;
-        ClientInfo client_info = {client_socket, client_id};
+        ThreadInfo client_info = {client_socket, client_id, client_addr, log_file, ip};
         pthread_create(&thread, NULL, handler, &client_info);
 
         client_id++;

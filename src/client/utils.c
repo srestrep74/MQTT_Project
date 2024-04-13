@@ -27,7 +27,7 @@ char *generate_client_id()
         client_id = (char *)malloc(length + 1);
         if (client_id == NULL)
         {
-            fprintf(stderr, "Error: No se pudo asignar memoria para el identificador del cliente.\n");
+            fprintf(stderr, "Error: Can not assign memory\n");
             exit(EXIT_FAILURE);
         }
 
@@ -50,7 +50,7 @@ void display_menu()
     printf("                  Menu                     \n");
     printf("===========================================\n");
     printf("1. Subscribe\n");
-    printf("2. Publishe\n");
+    printf("2. Publish\n");
     printf("3. Disconnect\n");
     printf("4. Unsubscribe\n");
     printf("===========================================\n");

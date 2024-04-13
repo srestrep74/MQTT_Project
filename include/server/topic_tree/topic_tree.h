@@ -22,6 +22,6 @@ TopicNode *getChildNodeHelper(TopicNode *, const char *);
 int **getSubscribers(TopicNode *, int *);
 TopicNode *getChildren(TopicNode *);
 void printTree(TopicNode *, int);
-void freeTopicTree(TopicNode *root);
+void freeTopicTree(TopicNode *);
 
 #endif
