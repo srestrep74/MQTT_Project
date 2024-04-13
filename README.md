@@ -67,7 +67,7 @@ The development focused on implementing Quality of Service (QoS) level 0, which 
 - Use the mqtt utf-8 encoders and decoders into the strings in the payload and fixed header of the subscribe and publish Packet.
 - Ack responses for the subscribe Packet.
 
-## How to ejecute the protocol
+## How to execute the protocol
 ### Compile server
 ```bash
 gcc src/actions/publish.c \
