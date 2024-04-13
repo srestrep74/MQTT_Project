@@ -108,7 +108,19 @@ gcc src/packet/packet.c
 
 
 ## Conclusions
-In conclusion, the current implementation provides a solid foundation for a basic implementation of the MQTT protocol with QoS 0. However, there are areas that could be improved, such as error management and the full implementation of all QoS levels. Overall, this project has provided a deeper understanding of the internal workings of the MQTT protocol and the challenges associated with its implementation.
+This project has successfully established a solid foundation for the implementation of the MQTT protocol, focusing on the Quality of Service (QoS) level 0. Throughout the development, we have gained a deeper understanding of the internal dynamics and technical challenges inherent in the MQTT protocol. Below are the key points:
+
+1. Satisfactory Basic Implementation: We have developed and demonstrated a functional implementation of the MQTT protocol that supports QoS 0, allowing for one-way communications without multiple delivery guarantees. This implementation efficiently handles basic connections and message transmission between clients and servers.
+
+2. Identified Areas for Improvement: Despite the project's successes, key areas for future improvements have been identified. Primarily, error management needs to be strengthened to increase system robustness. Moreover, the full implementation of higher QoS levels (1 and 2), which ensure message delivery at least once and exactly once respectively, is necessary for more critical applications that require higher reliability guarantees.
+
+3. Technical Challenges and Solutions: The project faced several technical challenges, including efficient memory management and handling multiple simultaneous connections. These challenges were valuable learning opportunities that allowed us to explore and apply advanced C programming techniques.
+
+4. Contribution to Knowledge and Community: By tackling the implementation of such a fundamental protocol for IoT, this project not only increases our technical knowledge but also contributes to the developer community by providing an example of how to approach the implementation of complex communication protocols in embedded systems and IoT applications.
+
+5. Perspectives for Future Research: The work done lays the groundwork for future research and development, where the complete implementation of all QoS levels and more sophisticated error management could be the focus. Additionally, the integration of advanced security measures and performance optimization are areas that could be further explored.
+
+In conclusion, this project has not only met its goal of implementing the basic level of the MQTT protocol but has also established a firm starting point from which the implementation can be expanded and improved. The lessons learned and challenges overcome along the way have enriched our technical understanding and set the stage for future advancements in this vital field of technology.
 
 ## References
 - [MQTT.org](https://mqtt.org/)
