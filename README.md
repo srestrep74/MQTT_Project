@@ -67,6 +67,23 @@ The development focused on implementing Quality of Service (QoS) level 0, which 
 - Use the mqtt utf-8 encoders and decoders into the strings in the payload and fixed header of the subscribe and publish Packet.
 - Ack responses for the subscribe Packet.
 
+## How to ejecute the protocol
+### Compile server
+```bash
+gcc src/actions/publish.c \
+    src/packet/packet.c \
+    src/server/server.c \
+    src/server/topic_tree/topic_tree.c \
+    src/encoders/utf8.c \
+    src/client/utils.c \
+    src/server/handlers.c \
+    src/actions/subscribe.c \
+    src/encoders/client_encoders.c \
+    src/encoders/server_encoders.c \
+    src/actions/unsubscribe.c \
+    src/log/log.c \
+    -o server
+```
 ## Conclusions
 In conclusion, the current implementation provides a solid foundation for a basic implementation of the MQTT protocol with QoS 0. However, there are areas that could be improved, such as error management and the full implementation of all QoS levels. Overall, this project has provided a deeper understanding of the internal workings of the MQTT protocol and the challenges associated with its implementation.
 
