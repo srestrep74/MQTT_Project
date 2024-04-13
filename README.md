@@ -84,6 +84,28 @@ gcc src/actions/publish.c \
     src/log/log.c \
     -o server
 ```
+### Execute server
+```bash
+./server SERVER_IP PORT <path/log.log>
+```
+
+### Compile client
+```bash
+gcc src/packet/packet.c
+    src/encoders/utf8.c
+    src/client/utils.c
+    src/client/client.c
+    src/encoders/client_encoders.c
+    src/actions/subscribe.c
+    src/server/topic_tree/topic_tree.c
+    src/log/log.c  -o client
+```
+### Execute server
+```bash
+./client <path/log.log>
+```
+
+
 ## Conclusions
 In conclusion, the current implementation provides a solid foundation for a basic implementation of the MQTT protocol with QoS 0. However, there are areas that could be improved, such as error management and the full implementation of all QoS levels. Overall, this project has provided a deeper understanding of the internal workings of the MQTT protocol and the challenges associated with its implementation.
 
