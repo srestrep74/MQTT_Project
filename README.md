@@ -53,10 +53,19 @@ The development focused on implementing Quality of Service (QoS) level 0, which 
 - Basic implementation of the MQTT protocol with QoS 0.
 - Client-server connection handling.
 - Support for subscriptions and publications.
+- Concurrent server.
+- Packets for subscribe, publish, connect, connack, disconnect and unsubscribe.
+- Utf-8 encoders and decoders for connect.
+- Subscription with wildcarts.
+- Use of a tree for organize topics and messages.
+- Log functionality to store the actions for clients and server.
+- Unsubscription for one or more topics for users.
+
 
 ### Unachieved
-- Complete implementation of all QoS levels.
-- Advanced error handling and connection recovery.
+- Complete implementation of all QoS levels, specifically into the subscribe Packet.
+- Use the mqtt utf-8 encoders and decoders into the strings in the payload and fixed header of the subscribe and publish Packet.
+- Ack responses for the subscribe Packet.
 
 ## Conclusions
 In conclusion, the current implementation provides a solid foundation for a basic implementation of the MQTT protocol with QoS 0. However, there are areas that could be improved, such as error management and the full implementation of all QoS levels. Overall, this project has provided a deeper understanding of the internal workings of the MQTT protocol and the challenges associated with its implementation.
